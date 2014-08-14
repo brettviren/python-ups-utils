@@ -7,7 +7,7 @@ setup properly.
 '''
 
 import os
-from subprocess import check_output, check_call
+from subprocess import Popen, PIPE, check_call
 
 
 def install(version, products_dir, temp_dir = None):
@@ -59,9 +59,11 @@ def depend(proddesc, setups=None):
     '''
     cmd = ""
     if setups:
-        cmd = "source %s && " % setups
+        cmd += "source %s && " % setups
     cmd += "ups depend " + proddesc.upsargs()
-    text = check_output(cmd, shell='/bin/bash')
+    # check_output is not in Python 2.6....
+    #text = check_output(cmd, shell='/bin/bash')
+    text = Popen(cmd, shell='/bin/bash', stdout = PIPE).communicate()[0]
     return text
 
 
