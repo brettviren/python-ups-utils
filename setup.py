@@ -8,10 +8,10 @@ setup(name = 'ups-util',
       url = 'http://github.com/brettviren/ups-utils',
       package_dir = {'':'python'},
       packages = ['ups'],
-      # entry_points = {
-      #     'console_scripts': [
-      #         'ups-util = ups.main:main',
-      #         ]
-      # }
+      entry_points = {
+          'console_scripts': [
+              'ups-util = ups.main:main',
+              ]
+      }
               
   )

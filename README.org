@@ -1,0 +1,23 @@
+python-ups-utils - Python modules and CLI utilities for working with UPS
+
+* Installation
+
+#+BEGIN_EXAMPLE
+$ python setup.py install
+#+END_EXAMPLE
+
+Or, for development
+
+#+BEGIN_EXAMPLE
+$ python setup.py devel
+#+END_EXAMPLE
+
+* CLI
+
+#+BEGIN_EXAMPLE
+$ ups-util [...]
+#+END_EXAMPLE
+
+* Python
+
+See [[./tests/]].

@@ -2,11 +2,14 @@
 
 import re
 
-from collections import namedtuple
-
-DepNode = namedtuple("DepNode",'name version flavor repo quals children')
+from objects import ProdDesc, Node
 
 def parse_line(line):
+    '''Parse one line from "ups depend".
+
+    Return a tuple holding the depth of the line and a ProdDesc
+    object.
+    '''
     depth = 0
     if line.startswith('|'):
         m = re.match('([\| ]  )*\|__', line)
@@ -24,21 +27,21 @@ def parse_line(line):
         pkg,ver, f,flav, z,path, q,quals = chunks
     else:
         raise ValueError, 'parse failure for line: %s' % str(chunks)
-    if pkg == 'sqlite':
-        print 'sqlite: depth=%d' % depth
-    return depth, DepNode(pkg, ver, flav, path, quals, list())
+    return depth, ProdDesc(pkg, ver, flav, path, quals)
 
 def parse(text):
     '''
     Parse text output from 'ups depend'.  
-    '''
 
+    Return sequence of ups.objects.Node with .payload holding ups.objects.ProdDesc.
+    '''
     allnodes = list()
     parents = list()
     for line in text.split('\n'):
         line = line.strip()
         if not line: continue
-        depth, node = parse_line(line)
+        depth, pd = parse_line(line)
+        node = Node(pd)
         allnodes.append(node)
         
         if not parents:
@@ -51,15 +54,3 @@ def parse(text):
         parents.append(node)
 
     return allnodes
-
-
-def dump(node, depth=0):
-    print '%s(%s %s)' % ('..'*depth, node.name, node.version)
-    for child in node.children:
-        dump(child, depth+1)
-
-def dump2(node, pre=''):
-    mypre = "%s(%s %s)" % (pre, node.name, node.version)
-    print mypre
-    for child in node.children:
-        dump2(child, mypre)

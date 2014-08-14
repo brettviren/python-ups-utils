@@ -29,7 +29,19 @@ root v5_34_18d -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/product
 |__xrootd v3_3_4a -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e5:prof
 '''
 
-from ups.depend import parse, dump, dump2
+from ups.depend import parse
+from ups.nodetools import walk as nodewalk
+
+def dump(node):
+    for n, rents in nodewalk(node):
+        depth = len(rents)
+        print '%s(%s %s)' % ('..'*depth, node.payload.name, node.payload.version)
+
+def dump2(node):
+    for n, rents in nodewalk(node):
+        depth = len(rents)
+        rents.append(n)
+        print ''.join(['(%s %s)' % (x.payload.name, x.payload.version) for x in rents])
 
 def test_parse_root():
     allnodes = parse(root_dep)
@@ -38,3 +50,13 @@ def test_parse_root():
     dump2(top)
     for n in allnodes:
         print n[:-1]
+
+def test_correct():
+    allnodes = parse(root_dep)
+    top = allnodes[0]
+
+    assert len(top.children) == 8, '%s lost some children' % (top.payload.name)
+    children_level1 = 'geant4 fftw gsl pythia postgresql mysql_client libxml2 xrootd'.split()
+    for count, childname in enumerate(children_level1):
+        assert top.children[count].payload.name == childname
+
