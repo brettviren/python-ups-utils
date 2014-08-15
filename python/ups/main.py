@@ -83,19 +83,15 @@ def depend(ctx, flavor, qualifiers, format, output, package, version):
     pd = find_product(ctx.obj['PRODUCTS'], package, version, qualifiers, flavor)
     if not pd:
         raise RuntimeError, 'Found no matching package: %s %s %s %s' % (package,version,qualifiers,flavor)
-    text = uc.depend(pd)
-    if format == 'raw':
-        open(output,'wb').write(text)
-        return
 
-    graph = depend.parse(text)
-    if format == 'dot':
-        from . import dot
-        text = dot.simple(graph)
-        open(output,'wb').write(text)
-        return
+    graph = depend.full(uc, [pd])
 
-    assert None, 'How did I get here?'
+    # just dot for now
+    from . import dot
+    text = dot.simple(graph)
+    open(output,'wb').write(text)
+    return
+
 
 # def cli_depend(*args):
 #     pd = objects.parse_proddesc(' '.join(args))
