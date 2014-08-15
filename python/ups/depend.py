@@ -2,7 +2,8 @@
 
 import re
 
-from objects import ProdDesc, Node
+from products import Product
+import networkx as nx
 
 def parse_line(line):
     '''Parse one line from "ups depend".
@@ -27,30 +28,30 @@ def parse_line(line):
         pkg,ver, f,flav, z,path, q,quals = chunks
     else:
         raise ValueError, 'parse failure for line: %s' % str(chunks)
-    return depth, ProdDesc(pkg, ver, flav, path, quals)
+    return depth, Product(pkg, ver, quals, path, flav)
 
 def parse(text):
     '''
-    Parse text output from 'ups depend'.  
-
-    Return sequence of ups.objects.Node with .payload holding ups.objects.ProdDesc.
+    Parse text output from 'ups depend' and return it as a graph.
     '''
-    allnodes = list()
+    graph = nx.DiGraph()
+
     parents = list()
     for line in text.split('\n'):
         line = line.strip()
         if not line: continue
         depth, pd = parse_line(line)
-        node = Node(pd)
-        allnodes.append(node)
-        
+
+        graph.add_node(pd)
         if not parents:
             assert depth == 0
-            parents.append(node)
+            parents.append(pd)
             continue
 
         parents = parents[:depth]
-        parents[-1].children.append(node)
-        parents.append(node)
+        parent = parents[-1]
+        graph.add_edge(parent, pd)
+        parents.append(pd)
+        continue
 
-    return allnodes
+    return graph

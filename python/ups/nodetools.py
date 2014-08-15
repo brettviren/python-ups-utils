@@ -20,4 +20,7 @@ def walk(node):
         for n,p in walk(child):
             yield n, [node] + p
     return
-    
+            
+        
+
+        

@@ -44,19 +44,18 @@ def dump2(node):
         print ''.join(['(%s %s)' % (x.payload.name, x.payload.version) for x in rents])
 
 def test_parse_root():
-    allnodes = parse(root_dep)
-    top = allnodes[0]
-    dump(top)
-    dump2(top)
-    for n in allnodes:
-        print n[:-1]
+    graph = parse(root_dep)
+    assert 22 == len(graph.nodes())
+    assert 21 == len(graph.edges())
 
 def test_correct():
-    allnodes = parse(root_dep)
-    top = allnodes[0]
+    graph = parse(root_dep)
 
-    assert len(top.children) == 8, '%s lost some children' % (top.payload.name)
-    children_level1 = 'geant4 fftw gsl pythia postgresql mysql_client libxml2 xrootd'.split()
-    for count, childname in enumerate(children_level1):
-        assert top.children[count].payload.name == childname
+    for n in graph.nodes():
+        if n.name == 'root':
+            assert n.version == 'v5_34_18d'
+            deps = graph[n]
+            assert 8 == len(deps)
+
+
 

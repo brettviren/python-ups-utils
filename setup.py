@@ -8,10 +8,13 @@ setup(name = 'ups-util',
       url = 'http://github.com/brettviren/ups-utils',
       package_dir = {'':'python'},
       packages = ['ups'],
+      install_requires=[
+          "networkx",
+          "click"
+      ],
       entry_points = {
           'console_scripts': [
               'ups-util = ups.main:main',
-              ]
+          ]
       }
-              
-  )
+)
