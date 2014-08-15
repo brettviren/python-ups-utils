@@ -21,3 +21,7 @@ $ ups-util [...]
 * Python
 
 See [[./tests/]].
+
+* Documentation
+
+See [[./doc/]].
