@@ -1,0 +1,5 @@
+pqxx v4_0_1b -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|__postgresql v9_1_5b -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|  |__python v2_7_5c -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|     |__sqlite v3_08_00_02 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|__gcc v4_8_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products

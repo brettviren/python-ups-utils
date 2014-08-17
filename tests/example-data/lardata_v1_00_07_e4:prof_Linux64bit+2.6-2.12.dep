@@ -1,0 +1,40 @@
+lardata v1_00_07 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|__cetpkgsupport v1_05_03 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -g current
+|__larcore v1_00_05 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|  |__art v1_08_10 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:nu:prof
+|     |__messagefacility v1_10_26 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|     |  |__fhiclcpp v2_17_12 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|     |     |__cetlib v1_03_25 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|     |        |__cpp0x v1_03_25 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|     |           |__boost v1_53_0 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|     |              |__gcc v4_8_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|     |__root v5_34_12 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:nu:prof
+|     |  |__geant4 v4_9_6_p02 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|     |  |  |__clhep v2_1_3_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|     |  |  |__xerces_c v3_1_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|     |  |  |__g4emlow v6_32 -f NULL -z /afs/rhic.bnl.gov/lbne/software/products
+|     |  |  |__g4neutron v4_2 -f NULL -z /afs/rhic.bnl.gov/lbne/software/products
+|     |  |  |__g4neutronxs v1_2 -f NULL -z /afs/rhic.bnl.gov/lbne/software/products
+|     |  |  |__g4nucleonxs v1_1 -f NULL -z /afs/rhic.bnl.gov/lbne/software/products
+|     |  |  |__g4photon v2_3 -f NULL -z /afs/rhic.bnl.gov/lbne/software/products
+|     |  |  |__g4pii v1_3 -f NULL -z /afs/rhic.bnl.gov/lbne/software/products
+|     |  |  |__g4radiative v3_6 -f NULL -z /afs/rhic.bnl.gov/lbne/software/products
+|     |  |  |__g4surface v1_0 -f NULL -z /afs/rhic.bnl.gov/lbne/software/products
+|     |  |__fftw v3_3_3 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q prof
+|     |  |__gsl v1_16 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q prof
+|     |  |__pythia v6_4_28 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q gcc48:prof
+|     |  |__postgresql v9_1_5b -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|     |  |  |__python v2_7_5c -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|     |  |     |__sqlite v3_08_00_02 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|     |  |__mysql_client v5_5_27 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4
+|     |  |__libxml2 v2_9_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q prof
+|     |  |__xrootd v3_3_4 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|     |__cppunit v1_12_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|     |__gccxml v0_9_20130621 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|     |__tbb v4_1_3 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|__nutools v1_01_05 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+   |__genie v2_8_0d -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+   |  |__lhapdf v5_9_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+   |  |  |__pdfsets v5_9_1 -f NULL -z /afs/rhic.bnl.gov/lbne/software/products
+   |  |__log4cpp v1_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+   |__cry v1_7 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof

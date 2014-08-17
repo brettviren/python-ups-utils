@@ -1,0 +1,6 @@
+ifbeam v1_4_2 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e5:prof
+|__ifdhc v1_4_2 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e5:prof
+|  |__python v2_7_6 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|  |  |__sqlite v3_08_03_00 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|  |__gcc v4_8_2 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|__libwda v2_9_5 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products

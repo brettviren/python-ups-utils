@@ -1,0 +1,2 @@
+cstxsd v3_3_0_p02a -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q gcc48
+|__gcc v4_8_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products

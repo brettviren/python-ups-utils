@@ -1,0 +1,5 @@
+cetlib v1_04_04 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e5:prof
+|__cetpkgsupport v1_05_03 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -g current
+|__cpp0x v1_04_04 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e5:prof
+   |__boost v1_55_0 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e5:prof
+      |__gcc v4_8_2 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products

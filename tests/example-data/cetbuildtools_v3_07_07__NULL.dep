@@ -1,0 +1,4 @@
+cetbuildtools v3_07_07 -f NULL -z /afs/rhic.bnl.gov/lbne/software/products
+|__cetpkgsupport v1_05_03 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -g current
+|__cmake v2_8_8 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -g current
+|__getopt v1_1_5 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products

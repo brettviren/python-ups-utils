@@ -1,0 +1,2 @@
+pythia v6_4_28 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q gcc48:prof
+|__gcc v4_8_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products

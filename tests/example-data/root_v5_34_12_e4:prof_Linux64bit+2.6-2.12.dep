@@ -1,0 +1,7 @@
+root v5_34_12 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|__fftw v3_3_3 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q prof
+|__libxml2 v2_9_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q prof
+|__xrootd v3_3_4 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|  |__gcc v4_8_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|__python v2_7_5c -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+   |__sqlite v3_08_00_02 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products

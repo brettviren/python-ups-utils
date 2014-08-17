@@ -1,0 +1,6 @@
+nucondb v1_4_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|__ifdhc v1_4_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products -q e4:prof
+|  |__python v2_7_5c -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|  |  |__sqlite v3_08_00_02 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|  |__gcc v4_8_1 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
+|__libwda v2_9_5 -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/products
