@@ -32,11 +32,11 @@ def parse_line(line):
 
 def parse(text):
     '''
-    Parse text output from 'ups depend' and return it as a graph.
+    Parse text output from 'ups depend' and return it as a tree (DAG).
 
     Warning: https://github.com/brettviren/python-ups-utils/issues/1
     '''
-    graph = nx.DiGraph()
+    tree = nx.DiGraph()
 
     parents = list()
     for line in text.split('\n'):
@@ -44,7 +44,7 @@ def parse(text):
         if not line: continue
         depth, pd = parse_line(line)
 
-        graph.add_node(pd)
+        tree.add_node(pd)
         if not parents:
             assert depth == 0
             parents.append(pd)
@@ -52,35 +52,47 @@ def parse(text):
 
         parents = parents[:depth]
         parent = parents[-1]
-        graph.add_edge(parent, pd)
+        tree.add_edge(parent, pd)
         parents.append(pd)
         continue
 
-    return graph
+    return tree
 
 
 
 def full(uc, seeds):
     '''
-    Create full dependency graph starting at given seeds.
+    Create full dependency tree starting at given seeds.
     '''
 
-    graph = nx.DiGraph()
+    tree = nx.DiGraph()
 
     for pd in seeds:
         text = uc.depend(pd)
         ng = parse(text)
-        graph.add_nodes_from(ng.nodes())
-        graph.add_edges_from(ng.edges())
+        tree.add_nodes_from(ng.nodes())
+        tree.add_edges_from(ng.edges())
 
     seen = list(seeds)
-    for pd in graph.nodes():
+    for pd in tree.nodes():
         if pd in seen:
             continue
         seen.append(pd)
         text = uc.depend(pd)
         ng = parse(text)
-        graph.add_nodes_from(ng.nodes())
-        graph.add_edges_from(ng.edges())
+        tree.add_nodes_from(ng.nodes())
+        tree.add_edges_from(ng.edges())
     # whew
-    return graph
+    return tree
+
+def roots(tree):
+    '''
+    Return sequence of nodes which have no parents.
+    '''
+    ret = set(tree.nodes())
+    for edge in tree.edges():
+        try:
+            ret.remove(edge[1])
+        except KeyError:
+            pass
+    return ret

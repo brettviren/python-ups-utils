@@ -2,14 +2,23 @@ python-ups-utils - Python modules and CLI utilities for working with UPS
 
 * Installation
 
+Optional, pre-install for virtualenv-based installation:
+
+#+BEGIN_EXAMPLE
+  $ virtualenv venv
+  $ source venv/bin/activate
+#+END_EXAMPLE
+
+The actual installation:
+
 #+BEGIN_EXAMPLE
 $ python setup.py install
 #+END_EXAMPLE
 
-Or, for development
+Or, to set up for development
 
 #+BEGIN_EXAMPLE
-$ python setup.py devel
+$ python setup.py develop
 #+END_EXAMPLE
 
 * CLI
@@ -20,7 +29,16 @@ $ ups-util [...]
 
 * Python
 
-See [[./tests/]].
+For examples, see [[./tests/]].
+
+To set up for testing, install for development as above and
+
+#+BEGIN_EXAMPLE
+  $ pip install nose
+  $ nosetests
+#+END_EXAMPLE
+
+Note, [[./tests/test_ups_commands.py]] downloads the source for UPS and builds it into [[./products/]].
 
 * Documentation
 

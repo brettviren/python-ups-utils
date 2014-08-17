@@ -9,13 +9,13 @@ from glob import glob
 from subprocess import Popen, PIPE, check_call
 
 from . import products
+from .repos import find_setups
 
 def install(version, products_dir, temp_dir = None):
     '''
     Install UPS <version> in <products_dir>, maybe using <temp_dir> to do the build.
     '''
     version_underscore = 'v' + version.replace('.','_')
-    version_nodtos = version.replace('.','')
 
     if os.path.exists(os.path.join(products_dir, '.upsfiles')):
         return 'Already installed into directory: %s' % os.path.realpath(products_dir)
@@ -47,14 +47,13 @@ def install(version, products_dir, temp_dir = None):
     os.chdir(cwd)
 
 class UpsCommands(object):
-    def __init__(self, setups = None):
+    def __init__(self, path):
         '''Create a UPS command set.  
 
-        <setups> may be a bash setup script to source before any UPS
-        command is executed.  If not given the calling environment
-        must already be configured to run the "ups" command.
+        The <path> argument is path of UPS product areas.
         '''
-        self._setups = setups
+        self.products = path
+        self._setups = find_setups(path)
 
     def ups(self, upscmdstr):
         '''

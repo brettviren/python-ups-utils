@@ -18,6 +18,8 @@ def find_setups(products, setups='setups'):
 
 def find_product(product_path, package, version, qualifiers, flavor):
     '''Return first matching product.'''
+    if isinstance(product_path, type("")):
+        product_path = product_path.split(':')
 
     want = set()
     if qualifiers:

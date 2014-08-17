@@ -9,6 +9,10 @@ A main CLI to the ups modules
 import os
 import click
 
+from ups.commands import UpsCommands, install as install_ups
+from ups.products import product_to_upsargs, upsargs_to_product
+import ups.tree
+
 @click.group()
 @click.option('-z','--products', envvar='PRODUCTS', multiple=True, type=click.Path(),
               help="UPS Product Directory to install into.")
@@ -16,6 +20,8 @@ import click
 def cli(ctx, products):
     '''UPS Utility Script'''
     ctx.obj['PRODUCTS'] = tuple(os.path.realpath(p) for p in products)
+    ctx.obj['commands'] = uc = UpsCommands(ctx.obj['PRODUCTS'])
+    ctx.obj['tree'] = ups.tree.Tree(uc)
     pass
 
 @cli.command()
@@ -24,10 +30,8 @@ def cli(ctx, products):
 @click.pass_context
 def init(ctx, tmp, version):
     '''Initialize a UPS products area including installation of UPS'''
-    import ups.commands
     products = ctx.obj['PRODUCTS'][0] or '.'
-
-    msg = ups.commands.install(version, products, tmp)
+    msg = install_ups(version, products, tmp)
     if msg:
         click.echo(msg)
 
@@ -35,9 +39,7 @@ def init(ctx, tmp, version):
 @click.pass_context
 def avail(ctx):
     '''List available UPS packages'''
-    from ups.commands import UpsCommands
-    from ups.repos import find_setups
-    uc = UpsCommands(find_setups(ctx.obj['PRODUCTS']))
+    uc = ctx.obj['commands']
     text = uc.avail()
     click.echo(text)
 
@@ -51,11 +53,9 @@ def avail(ctx):
 @click.argument('version')
 @click.pass_context
 def resolve(ctx, flavor, qualifiers, package, version):
-    from ups.repos import find_setups, find_product
-    from ups.commands import UpsCommands
-    uc = UpsCommands(find_setups(ctx.obj['PRODUCTS']))
-    pd = find_product(ctx.obj['PRODUCTS'], package, version, qualifiers, flavor or uc.flavor())
-    click.echo(str(pd))
+    tree = ctx.obj['tree']
+    pd = tree.resolve(package, version, qualifiers, flavor)
+    click.echo(product_to_upsargs(pd))
 
 
 @cli.command()
@@ -74,16 +74,12 @@ def depend(ctx, flavor, qualifiers, format, output, package, version):
     if format not in ['raw','dot']:
         raise RuntimeError, 'Unknown format: "%s"' % format
 
-    from ups.repos import find_setups, find_product
-    from ups.commands import UpsCommands
-    from ups import depend
-    uc = UpsCommands(find_setups(ctx.obj['PRODUCTS']))
-    flavor = flavor or uc.flavor()
-    pd = find_product(ctx.obj['PRODUCTS'], package, version, qualifiers, flavor)
+    tree = ctx.obj['tree']
+    pd = tree.resolve(package, version, qualifiers, flavor)
     if not pd:
         raise RuntimeError, 'Found no matching package: %s %s %s %s' % (package,version,qualifiers,flavor)
 
-    graph = depend.full(uc, [pd])
+    graph = tree.dependencies([pd])
 
     # just dot for now
     from . import dot
@@ -92,56 +88,37 @@ def depend(ctx, flavor, qualifiers, format, output, package, version):
     return
 
 
-# def cli_depend(*args):
-#     pd = objects.parse_proddesc(' '.join(args))
-#     setups = ''
-#     if pd.repo:
-#         setups = os.path.join(pd.repo,'setups')
-#     return commands.depend(pd, setups)
+@cli.command()
+@click.pass_context
+def top(ctx):
+    '''
+    List the top-level packages
+    '''
+    tree = ctx.obj['tree']
+    ret = [product_to_upsargs(p) for p in sorted(tree.top())]
+    click.echo('\n'.join(ret))
+    
+@cli.command()
+@click.option('-f','--flavor',
+              help="Specify platform flavor")
+@click.option('-q','--qualifiers',
+              help="Specify build qualifiers as colon-separated list")
+@click.option('-n','--no-op', help="Dry run")
+@click.argument('package')
+@click.argument('version')
+@click.pass_context
+def purge(ctx, flavor, qualifiers, no_op, package, version):
+    tree = ctx.obj['tree']
+    pd = tree.resolve(package, version, qualifiers, flavor)
+    if not pd:
+        raise RuntimeError, 'Found no matching package: %s %s %s %s' % (package,version,qualifiers,flavor)
+    tokill = tree.purge([pd])
+    ret = [product_to_upsargs(p) for p in sorted(tokill)]
+    click.echo('\n'.join(ret))
+    
 
 def main():
     cli(obj={}, auto_envvar_prefix='UU')
 
 
 
-# def cli_dot(*args):
-#     '''
-#     Return a GraphViz dot representation of the dependency graph
-#     '''
-#     setups = ""
-
-#     allprods = []
-#     if args:
-#         pd = objects.parse_proddesc(' '.join(args))
-#         allprods = [pd]
-#         if pd.repo:
-#             setups = os.path.join(pd.repo, 'setups')
-#     else:
-#         parser = OptionParser()
-#         parser.add_option('-z',dest='repo', default='')
-#         o,a = parser.parse_args(list(args))
-#         if o.repo:
-#             setups = os.path.join(o.repo, 'setups')
-#         text = commands.avail(setups)
-#         allprods = objects.parse_prodlist(text)
-
-#     seenprods = list()
-#     for prod in allprods:
-        
-
-
-#         text = commands.depend(pd, setups)
-#         allnodes = depend.parse(text)
-
-
-
-# def main():
-#     cmd = 'cli_' + sys.argv[1]
-#     meth = eval(cmd)
-#     args = sys.argv[2:]
-#     print meth(*args)
-
-
-
-if __name__ == '__main__':
-    main()
