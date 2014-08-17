@@ -35,8 +35,8 @@ def install(version, products_dir, temp_dir = None):
         tf = tarfile.open(tarball)
         tf.extractall()
         os.chdir('ups/' + version_underscore)
-        check_call("./buildUps.sh " + temp_dir,shell='/bin/bash')
-        check_call("./tarUpsUpd.sh " + temp_dir,shell='/bin/bash')
+        check_call("./buildUps.sh " + temp_dir, shell='/bin/bash')
+        check_call("./tarUpsUpd.sh " + temp_dir, shell='/bin/bash')
         os.chdir(temp_dir)
 
     kernel, _,_,_, machine = os.uname()
@@ -66,8 +66,9 @@ class UpsCommands(object):
         '''
         cmd = ""
         if self._setups:
-            cmd += "source %s && " % self._setups
+            cmd += ". %s && " % self._setups
         cmd += "ups " + upscmdstr
+        #print 'CMD:',cmd
         text = Popen(cmd, shell='/bin/bash', stdout = PIPE).communicate()[0]
         return text
 

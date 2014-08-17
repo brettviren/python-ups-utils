@@ -8,7 +8,7 @@ WARNING: these tests will merely print a message and succeed if UPS is not detec
 
 import os
 from ups.commands import install, UpsCommands
-from ups.products import Product
+from ups.products import make_product
 
 ups_version = '5.0.5'
 ups_products = os.path.join(os.path.realpath('.'), 'products')
@@ -22,10 +22,9 @@ def test_ups_depend():
     '''
     Test calling "ups depend".
     '''
-    import os
     ups = UpsCommands(ups_setup)
 
-    prod = Product('ups')
+    prod = make_product('ups')
     text = ups.depend(prod)
 
     print text
@@ -35,7 +34,6 @@ def test_ups_avail():
     '''
     Test calling "ups depend".
     '''
-    import os
     ups = UpsCommands(ups_setup)
 
     text = ups.avail()

@@ -53,7 +53,6 @@ def avail(ctx):
 def resolve(ctx, flavor, qualifiers, package, version):
     from ups.repos import find_setups, find_product
     from ups.commands import UpsCommands
-    from ups import depend
     uc = UpsCommands(find_setups(ctx.obj['PRODUCTS']))
     pd = find_product(ctx.obj['PRODUCTS'], package, version, qualifiers, flavor or uc.flavor())
     click.echo(str(pd))

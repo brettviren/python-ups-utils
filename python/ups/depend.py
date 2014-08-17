@@ -2,7 +2,7 @@
 
 import re
 
-from products import Product
+from products import make_product
 import networkx as nx
 
 def parse_line(line):
@@ -28,7 +28,7 @@ def parse_line(line):
         pkg,ver, f,flav, z,path, q,quals = chunks
     else:
         raise ValueError, 'parse failure for line: %s' % str(chunks)
-    return depth, Product(pkg, ver, quals, path, flav)
+    return depth, make_product(pkg, ver, quals, path, flav)
 
 def parse(text):
     '''

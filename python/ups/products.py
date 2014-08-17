@@ -5,10 +5,11 @@ Data objects and methods for UPS products
 
 from collections import namedtuple
 
-def Product(name, version='', quals="", repo="", flavor=""):
+Product = namedtuple("Product",'name version quals repo flavor')
+
+def make_product(name, version='', quals="", repo="", flavor=""):
     '''Create an object holding information about a UPS product.'''
-    P = namedtuple("Product",'name version quals repo flavor')
-    return P(name, version, quals, repo, flavor)
+    return Product(name, version, quals, repo, flavor)
 
 
 def product_to_upsargs(pd):
@@ -40,7 +41,7 @@ def upsargs_to_product(string):
         ver = a[1]
     except IndexError:
         ver = ''
-    pd = Product(pkg, ver, o.quals, o.repo, o.flavor)
+    pd = make_product(pkg, ver, o.quals, o.repo, o.flavor)
     return pd
 
 def parse_prodlist(text):
@@ -52,7 +53,7 @@ def parse_prodlist(text):
         line =line.strip()
         if not line: continue
         ver,pkg,flav,quals,repo = [x.replace('"','') for x in line.split()]
-        p = Product(ver, pkg, quals, repo, flav)
+        p = make_product(ver, pkg, quals, repo, flav)
         ret.append(p)
     return ret
 

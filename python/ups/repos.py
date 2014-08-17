@@ -6,7 +6,7 @@ Interact with UPS repositories
 import os
 from glob import glob
 
-from .products import Product
+from .products import make_product
 
 def find_setups(products, setups='setups'):
     '''Return path to first instance of setups script in give products path'''
@@ -28,7 +28,7 @@ def find_product(product_path, package, version, qualifiers, flavor):
         for maybe in glob(stub + '_*'):
             have = set([x for x in maybe[len(stub)+1:].split('_') if x])
             if have == want:
-                return Product(package, version, qualifiers, path, flavor)
+                return make_product(package, version, qualifiers, path, flavor)
         continue
 
         

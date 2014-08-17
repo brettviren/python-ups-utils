@@ -5,3 +5,4 @@ venv
 example-data
 build-ups
 products
+*.pickle
