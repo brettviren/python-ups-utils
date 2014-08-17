@@ -33,6 +33,8 @@ def parse_line(line):
 def parse(text):
     '''
     Parse text output from 'ups depend' and return it as a graph.
+
+    Warning: https://github.com/brettviren/python-ups-utils/issues/1
     '''
     graph = nx.DiGraph()
 
@@ -54,4 +56,31 @@ def parse(text):
         parents.append(pd)
         continue
 
+    return graph
+
+
+
+def full(uc, seeds):
+    '''
+    Create full dependency graph starting at given seeds.
+    '''
+
+    graph = nx.DiGraph()
+
+    for pd in seeds:
+        text = uc.depend(pd)
+        ng = parse(text)
+        graph.add_nodes_from(ng.nodes())
+        graph.add_edges_from(ng.edges())
+
+    seen = list(seeds)
+    for pd in graph.nodes():
+        if pd in seen:
+            continue
+        seen.append(pd)
+        text = uc.depend(pd)
+        ng = parse(text)
+        graph.add_nodes_from(ng.nodes())
+        graph.add_edges_from(ng.edges())
+    # whew
     return graph
