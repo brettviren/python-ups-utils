@@ -54,6 +54,7 @@ class UpsCommands(object):
         '''
         self.products = path
         self._setups = find_setups(path)
+        print 'Using UPS at %s' % self._setups
 
     def ups(self, upscmdstr):
         '''

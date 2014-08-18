@@ -10,6 +10,8 @@ from .products import make_product
 
 def find_setups(products, setups='setups'):
     '''Return path to first instance of setups script in give products path'''
+    if isinstance(products, type("")):
+        products = products.split()
     for path in products:
         maybe = os.path.join(path, setups)
         if os.path.exists(maybe):

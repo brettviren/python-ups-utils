@@ -38,7 +38,8 @@ class FakeUC(object):
 def test_parse_one():
     uc = FakeUC()
     pd = make_product('ups', 'v5_0_5', '', '', 'Linux64bit+2.6-2.12')
-    graph1 = uc.depend(pd)
+    deptext = uc.depend(pd)
+    graph1 = ups.depend.parse(deptext)
 
     nx.write_gpickle(graph1,'test_parse_one.pickle')
     graph2 = nx.read_gpickle('test_parse_one.pickle')
