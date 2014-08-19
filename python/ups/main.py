@@ -15,6 +15,7 @@ from networkx import nx
 from ups.commands import UpsCommands, install as install_ups
 from ups.products import product_to_upsargs, upsargs_to_product, make_product
 import ups.repos
+import ups.tree
 
 @click.group()
 @click.option('-z','--products', envvar='PRODUCTS', multiple=True, type=click.Path(),
@@ -104,15 +105,12 @@ def top(ctx):
     '''
     List the top-level packages
     '''
-    uc = ctx.obj['commands']
-    tree = uc.full_dependencies()
-    top_nodes = set(tree.nodes())
-    for edge in tree.edges():
-        try:
-            top_nodes.remove(edge[1])
-        except KeyError:
-            pass
-    for p in top_nodes:
+    repos = [ups.repos.UpsRepo(pdir) for pdir in ctx.obj['PRODUCTS']]
+    tree = ups.repos.squash_trees(repos)
+    top_nodes = ups.tree.top_nodes(tree)
+
+    for p in sorted(top_nodes):
+        p = ups.repos.first_pvqf(repos, *p[:4])
         click.echo(product_to_upsargs(p))
     
 @cli.command()
@@ -124,21 +122,20 @@ def purge(ctx, no_op, package, version):
     '''
     Return candidates for purging if the given product were removed.
     '''
-
-    tree = ctx.obj['tree']
-    pds = tree.match(name=package, version=version)
+    repos = [ups.repos.UpsRepo(pdir) for pdir in ctx.obj['PRODUCTS']]
+    tree = ups.repos.squash_trees(repos)
+    pds = ups.tree.match(tree.nodes(), name=package, version=version)
     if not pds:
         raise RuntimeError, 'No matches for name="%s" version="%s"' % (package,version)
-
     print 'Targeting:'
     for p in pds:
         print '\t%s' % str(p)
-        assert p.repo
 
-    tokill = tree.purge(pds)
+    tokill = ups.tree.purge(tree, pds)
     rmpaths = set()
     for dead in tokill:
-        path = os.path.join(dead.repo, dead.name, dead.version)
+        dead = ups.repos.first_pvqf(repos, *dead[:4])
+        path = os.path.join(dead.repo, dead.name, dead.version)        
         if not os.path.exists(path):
             click.echo('warning: no such product directory: %s' % path)
             continue

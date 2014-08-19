@@ -34,7 +34,8 @@ class UpsRepo(object):
         self._cache_dir = os.path.expanduser(os.path.expandvars(cachedir))
         if not os.path.exists(self._cache_dir):
             os.makedirs(self._cache_dir)
-
+        self.tree = self._update()
+        
     def _get_shelf(self, name = 'ups-repos'):
         return shelve.open(os.path.join(self._cache_dir, name))
 
@@ -44,7 +45,7 @@ class UpsRepo(object):
             sha.update(str(p))
         return sha.hexdigest()
 
-    def tree(self):
+    def _update(self):
         '''
         Return tree of dependencies
         '''
@@ -73,7 +74,7 @@ class UpsRepo(object):
         '''
         Return a list of available products in this repository, according to UPS.
         '''
-        return self.tree().nodes()
+        return self.tree.nodes()
 
 
 def first_avail(repos):
@@ -110,7 +111,7 @@ def squash_trees(repos):
 
     stree = nx.DiGraph()
     for repo in repos:
-        tree = repo.tree()
+        tree = repo.tree
         stree.add_nodes_from([strip(n) for n in tree.nodes()])
         stree.add_edges_from([(strip(t),strip(h)) for t,h in tree.edges()])
     return stree
