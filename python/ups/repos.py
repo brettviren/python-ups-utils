@@ -6,9 +6,77 @@ Interact with UPS repositories
 import os
 from glob import glob
 
-from .products import make_product
+import networkx as nx
+
+from .products import make_product, upslisting_to_product
+from . import depend
+
+
+def dependency_tree(uc):
+    '''
+    Return the full dependency for the given UPS command set <uc>
+    '''
+
+        
+        
+
+
 
 class UpsRepo(object):
+    '''A UpsRepo object embodies a snapshot of the state of a UPS
+    products area.
+
+    It consists of:
+
+    - a directory
+    - a user script to setup to use the "ups" command in that area
+    - a number of products
+    '''
+
+    def __init__(self, directory):
+        self._directory = directory
+        self.uc = UpsCommands(os.path.join(directory, 'setups'))
+        
+        availtext = self.uc.avail()
+        ret = set()
+        for line in availtext.split('\n'):
+            pd = upslisting_to_product(line)
+            ret.add(pd)
+
+        tree = nx.DiGraph()
+
+    for pd in seeds:
+        text = uc.depend(pd)
+        ng = parse(text)
+        tree.add_nodes_from(ng.nodes())
+        tree.add_edges_from(ng.edges())
+
+        self.tree = depend.full(self.uc, ret)
+        
+    def available(self):
+        '''
+        Return a list of available products in this repository, according to UPS.
+        '''
+        return self.tree.nodes()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class UpsRepoObsolete(object):
     '''
     The UPS repository as a database.
     '''
@@ -81,35 +149,3 @@ class UpsRepo(object):
                 self.chirp('\tquals mismatch "%s" != "%s"' %(want, have))
                 continue
             return pd
-
-
-# def pathify(path):
-#     if isinstance(path, type("")):
-#         path = path.split(":")
-#     return path
-
-# def find_setups(products, setups='setups'):
-#     '''Return path to first instance of setups script in give products path.'''
-#     for path in pathify(products):
-#         maybe = os.path.join(path, setups)
-#         if os.path.exists(maybe):
-#             return maybe
-#     return
-
-# def find_product(product, package, version, qualifiers, flavor):
-#     '''Return first matching product.'''
-#     want = set()
-#     if qualifiers:
-#         want = set(qualifiers.split(':'))
-    
-#     for path in pathify(product):
-#         stub = os.path.join(path, package, version + '.version', flavor)
-#         for maybe in glob(stub + '_*'):
-#             have = set([x for x in maybe[len(stub)+1:].split('_') if x])
-#             if have == want:
-#                 return make_product(package, version, qualifiers, path, flavor)
-#         continue
-
-        
-        
-    

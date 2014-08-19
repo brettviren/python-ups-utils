@@ -8,8 +8,8 @@ import urllib
 from glob import glob
 from subprocess import Popen, PIPE, check_call
 
-from . import products
-from .repos import UpsRepo
+import ups.products
+import ups.depend
 
 def install(version, products_dir, temp_dir = None):
     '''
@@ -47,36 +47,14 @@ def install(version, products_dir, temp_dir = None):
     os.chdir(cwd)
 
 class UpsCommands(object):
-    def __init__(self, path, cache = '~/.ups-util/cache/'):
+    def __init__(self, path):
         '''Create a UPS command set.  
 
         The <path> argument is path of UPS product areas.
         '''
         if isinstance(path, type("")):
             path = path.split(":")
-        self.products_path = path
-        self.repo = UpsRepo(self.products_path)
-        
-        self._depcache = None
-        if cache:
-            cache = os.path.expanduser(os.path.expandvars(cache))
-            if not os.path.exists(cache):
-                os.makedirs(cache)
-            #self._depcache = shelve.open(os.path.join(cache,'depcache'))
-            self._depcache = os.path.join(cache,'depcache')
-
-    def _product_ident(self, pd):
-        '''
-        Return a unique string for the product <pd>.
-        '''
-        if not pd.repo:
-            new = self.repo.find_product(pd.name, pd.version, pd.quals, pd.flavor)
-            if not new:
-                new = self.repo.find_product(pd.name, pd.version, None, pd.flavor)
-            assert new, 'Found no product: "%s"' % str(pd)
-            pd = new
-        ret = str(pd)
-        return ret
+        self._products_path = path
 
     def ups(self, upscmdstr):
         '''
@@ -88,14 +66,11 @@ class UpsCommands(object):
         '''
         return self.call(upscmdstr, cmd='ups')
 
-    def call(self, cmdstr, cmd='ups', setups = None):
+    def call(self, cmdstr, cmd='ups'):
         cmdlist = list()
 
-        if setups is None:
-            setups = self.repo.setups_files()
-        
-        for script in setups:
-            cmdlist.append(". " + script)
+        for pdir in self._products_path:
+            cmdlist.append(". %s/setups" % pdir)
         cmdlist.append(cmd + " " + cmdstr)
         line = ' && '.join(cmdlist)
         print 'UPS CMD:',line
@@ -106,31 +81,21 @@ class UpsCommands(object):
         '''Return the output of "ups flavor"'''
         return self.ups("flavor").strip()
 
-    def depend_nocache(self, product):
-        return self.ups("depend " + products.product_to_upsargs(product))
-
     def depend(self, product):
-        '''Run the "ups depend" command on the <product>'''
-        if not self._depcache:
-            return self.depend_nocache(product)
-
-        ident = self._product_ident(product)
-        import shelve
-        cache = shelve.open(self._depcache)
-        ret = cache.get(ident, None)
-        if ret: 
-            return ret
-        ret = self.depend_nocache(product)
-        cache[ident] = ret
-        cache.close()
-        return ret
-        
+        return self.ups("depend " + ups.products.product_to_upsargs(product))
 
     def avail(self):
-        '''Run the "ups list" command and return the text'''
+        '''Return available products as set of Product objects.'''
         text = self.ups("list -aK+")
-        lines = [x for x in list(set(text.split('\n'))) if x]
-        lines.sort()
-        return '\n'.join(lines)
+        ret = set()
+        for line in text.split('\n'):
+            line = line.strip()
+            if not line: continue
+            pd = ups.products.upslisting_to_product(line) # note, no repo on purpose
+            ret.add(pd)
+        return ret
 
-
+    def full_dependencies(self):
+        '''Return a tree of entire dependencies'''
+        pds = self.avail()
+        return ups.depend.full(self, pds)

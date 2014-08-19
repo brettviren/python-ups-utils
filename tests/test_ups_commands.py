@@ -9,7 +9,6 @@ WARNING: these tests will merely print a message and succeed if UPS is not detec
 import os
 from ups.commands import install, UpsCommands
 from ups.products import make_product
-import ups.tree
 
 ups_version = '5.0.5'
 ups_version_underscore = 'v' + ups_version.replace('.','_')
@@ -29,7 +28,7 @@ def test_ups_depend():
     #print 'PROD:',prod
     assert prod.flavor
 
-    text = uc.depend_nocache(prod)
+    text = uc.depend(prod)
     assert text.startswith('ups v'), '"%s"'%text
 
     text2 = uc.depend(prod)
@@ -41,19 +40,15 @@ def test_ups_avail():
     '''
     uc = UpsCommands(ups_products)
 
-    text = uc.avail()
-    #print text
+    pds = uc.avail()
+    #print '\n'.join([str(p) for p in sorted(pds)])
+    for p in pds:
+        assert not p.repo
 
-    
-
-def test_ups_tree_match():
+def test_ups_deps():
     uc = UpsCommands(ups_products)
-    tree = ups.tree.Tree(uc)
-    pds = tree.match(name='upd')
-    assert len(pds) == 1
-    pds = tree.match(name='u*')
-    assert len(pds) == 0
-    pds = tree.match(name='u.*')
-    assert len(pds) == 2, pds
-    assert "ups" in [p.name for p in pds]
-    assert "upd" in [p.name for p in pds]
+    tree = uc.full_dependencies()
+    assert 2 == len(tree.nodes())
+    assert 0 == len(tree.edges())
+    for pd in tree.nodes():
+        assert pd.repo, str(pd)

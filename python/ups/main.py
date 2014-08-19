@@ -10,9 +10,10 @@ import os
 import sys
 import click
 
+from networkx import nx
+
 from ups.commands import UpsCommands, install as install_ups
-from ups.products import product_to_upsargs, upsargs_to_product
-import ups.tree
+from ups.products import product_to_upsargs, upsargs_to_product, make_product
 
 @click.group()
 @click.option('-z','--products', envvar='PRODUCTS', multiple=True, type=click.Path(),
@@ -22,7 +23,6 @@ def cli(ctx, products):
     '''UPS Utility Script'''
     ctx.obj['PRODUCTS'] = tuple(os.path.realpath(p) for p in products)
     ctx.obj['commands'] = uc = UpsCommands(ctx.obj['PRODUCTS'])
-    ctx.obj['tree'] = ups.tree.Tree(uc)
     pass
 
 @cli.command()
@@ -40,11 +40,9 @@ def init(ctx, tmp, version):
 @click.pass_context
 def avail(ctx):
     '''List available UPS packages'''
-    tree = ctx.obj['tree']
-    for pd in tree.available():
+    uc = ctx.obj['commands']
+    for pd in uc.avail():
         click.echo(product_to_upsargs(pd))
-
-
 
 @cli.command()
 @click.option('-f','--flavor', 
@@ -55,16 +53,19 @@ def avail(ctx):
 @click.argument('version')
 @click.pass_context
 def resolve(ctx, flavor, qualifiers, package, version):
-    tree = ctx.obj['tree']
-    pd = tree.resolve(package, version, qualifiers, flavor)
-    if not pd:
-        click.echo('no package found in %s' % str(tree.uc.products_path))
-        sys.exit(1)
-    click.echo(product_to_upsargs(pd))
-
+    uc = ctx.obj['commands']
+    flavor = flavor or uc.flavor()
+    for pd in uc.avail():
+        if pd.name != package: continue
+        if pd.version != version: continue
+        if pd.flavor != flavor: continue
+        if set(pd.quals.split(":")) != set(qualifiers.split(":")): continue
+        click.echo(product_to_upsargs(pd))
+        break
 
 @cli.command()
-@click.option('-f','--flavor', help="Specify platform flavor")
+@click.option('-f','--flavor', 
+              help="Specify platform flavor")
 @click.option('-q','--qualifiers', 
               help="Specify build qualifiers as colon-separated list")
 @click.option('-F','--format', default = 'raw', type=click.Choice(['raw','dot']),
@@ -82,18 +83,31 @@ def depend(ctx, flavor, qualifiers, format, output, package, version):
     if format not in ['raw','dot']:
         raise RuntimeError, 'Unknown format: "%s"' % format
 
-    tree = ctx.obj['tree']
-    pd = tree.resolve(package, version, qualifiers, flavor)
-    if not pd:
-        raise RuntimeError, 'Found no matching package: %s %s %s %s' % (package,version,qualifiers,flavor)
+    uc = ctx.obj['commands']
+    tree = uc.full_dependencies()
+    found = None
+    for pd in tree.nodes():
+        if pd.name != package: continue
+        if pd.version != version: continue
+        if pd.flavor != flavor: continue
+        if set(pd.quals.split(":")) != set(qualifiers.split(":")): continue
+        found = pd
+        break
+    if not found:
+        click.echo('Found no product matching %s %s -f "%s"-q "%s"' % \
+                   (pacakge, version, flavor, qualifiers))
+        sys.exit(1)
 
-    graph = tree.dependencies([pd])
+    subtree = nx.DiGraph()
+    subtree.add_edges_from(nx.bfs_edges(tree, found))
 
-    # just dot for now
-    from . import dot
-    text = dot.simple(graph)
-    open(output,'wb').write(text)
-    return
+    if format == 'dot':
+        from . import dot
+        text = dot.simple(subtree)
+        open(output,'wb').write(text)
+        
+    # raw
+    print subtree.edges()
 
 
 @cli.command()
@@ -102,9 +116,16 @@ def top(ctx):
     '''
     List the top-level packages
     '''
-    tree = ctx.obj['tree']
-    ret = [product_to_upsargs(p) for p in sorted(tree.top())]
-    click.echo('\n'.join(ret))
+    uc = ctx.obj['commands']
+    tree = uc.full_dependencies()
+    top_nodes = set(tree.nodes())
+    for edge in tree.edges():
+        try:
+            top_nodes.remove(edge[1])
+        except KeyError:
+            pass
+    for p in top_nodes:
+        click.echo(product_to_upsargs(p))
     
 @cli.command()
 @click.option('-n','--no-op', help="Dry run")
