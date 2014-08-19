@@ -7,6 +7,7 @@ A main CLI to the ups modules
 # This is kind of a mess right now
 
 import os
+import sys
 import click
 
 from ups.commands import UpsCommands, install as install_ups
@@ -46,15 +47,19 @@ def avail(ctx):
 
 
 @cli.command()
-@click.option('-f','--flavor', help="Specify platform flavor")
+@click.option('-f','--flavor', 
+              help="Limit the platform flavor")
 @click.option('-q','--qualifiers', 
-              help="Specify build qualifiers as colon-separated list")
+              help="Limit the build qualifiers with a colon-separated list")
 @click.argument('package')
 @click.argument('version')
 @click.pass_context
 def resolve(ctx, flavor, qualifiers, package, version):
     tree = ctx.obj['tree']
     pd = tree.resolve(package, version, qualifiers, flavor)
+    if not pd:
+        click.echo('no package found in %s' % str(tree.uc.products_path))
+        sys.exit(1)
     click.echo(product_to_upsargs(pd))
 
 
@@ -102,25 +107,40 @@ def top(ctx):
     click.echo('\n'.join(ret))
     
 @cli.command()
-@click.option('-f','--flavor',
-              help="Specify platform flavor")
-@click.option('-q','--qualifiers',
-              help="Specify build qualifiers as colon-separated list")
 @click.option('-n','--no-op', help="Dry run")
 @click.argument('package')
 @click.argument('version')
 @click.pass_context
-def purge(ctx, flavor, qualifiers, no_op, package, version):
+def purge(ctx, no_op, package, version):
     '''
     Return candidates for purging if the given product were removed.
     '''
     tree = ctx.obj['tree']
-    pd = tree.resolve(package, version, qualifiers, flavor)
-    if not pd:
-        raise RuntimeError, 'Found no matching package: %s %s %s %s' % (package,version,qualifiers,flavor)
-    tokill = tree.purge([pd])
-    ret = [product_to_upsargs(p) for p in sorted(tokill)]
-    click.echo('\n'.join(ret))
+    pds = tree.match(name=package, version=version)
+    if not pds:
+        raise RuntimeError, 'No matches for name="%s" version="%s"' % (package,version)
+
+    print 'Targeting:'
+    for p in pds:
+        print '\t%s' % str(p)
+        assert p.repo
+
+    tokill = tree.purge(pds)
+    rmpaths = set()
+    for dead in tokill:
+        path = os.path.join(dead.repo, dead.name, dead.version)
+        if not os.path.exists(path):
+            click.echo('warning: no such product directory: %s' % path)
+            continue
+        rmpaths.add(path)
+        vpath = path + '.version'
+        if not os.path.exists(vpath):
+            click.echo('warning: no such version directory: %s' % vpath)
+            continue
+        rmpaths.add(vpath)
+    for path in sorted(rmpaths):
+        print path
+
     
 
 def main():

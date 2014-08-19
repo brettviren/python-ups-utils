@@ -71,6 +71,8 @@ class UpsCommands(object):
         '''
         if not pd.repo:
             new = self.repo.find_product(pd.name, pd.version, pd.quals, pd.flavor)
+            if not new:
+                new = self.repo.find_product(pd.name, pd.version, None, pd.flavor)
             assert new, 'Found no product: "%s"' % str(pd)
             pd = new
         ret = str(pd)
@@ -86,10 +88,14 @@ class UpsCommands(object):
         '''
         return self.call(upscmdstr, cmd='ups')
 
-    def call(self, cmdstr, cmd='ups'):
+    def call(self, cmdstr, cmd='ups', setups = None):
         cmdlist = list()
-        for setups in self.repo.setups_files():
-            cmdlist.append(". " + setups)
+
+        if setups is None:
+            setups = self.repo.setups_files()
+        
+        for script in setups:
+            cmdlist.append(". " + script)
         cmdlist.append(cmd + " " + cmdstr)
         line = ' && '.join(cmdlist)
         print 'UPS CMD:',line

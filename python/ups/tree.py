@@ -2,7 +2,7 @@
 '''
 Method for operating on the products tree
 '''
-
+import re
 from .repos import UpsRepo
 from . import depend
 from ups.products import product_to_upsargs, upsargs_to_product, upslisting_to_product
@@ -14,8 +14,41 @@ class Tree(object):
         self.uc = commands
         self.repo = UpsRepo(self.uc.products_path)
 
+    def match(self, **kwds):
+        '''Return list of matching products.  
+
+        The <kwds> hold things to match on.  Keys should match
+        arguments of products.Product and values be regular
+        expressions (not globs).  Unknown keys are ignored.
+        '''
+        def match_one(pd):
+            for k,v in kwds.items():
+                string = getattr(pd, k, None)
+                if string is None:
+                    continue
+                m = re.match(v, string)
+                if not m:
+                    return
+                g = m.group()
+                if not g:
+                    return
+                if g != m.string:
+                    return
+                continue
+            return pd
+
+        ret = list()
+        for pd in self.available():
+            if match_one(pd):
+                ret.append(pd)
+        return ret
+
+
     def resolve(self, name ,version='', qualifiers='', flavor=''):
-        return self.repo.find_product(name, version, qualifiers, flavor or self.uc.flavor())
+        pd = self.repo.find_product(name, version, qualifiers, flavor or self.uc.flavor())
+        if not pd:
+            pd = self.repo.find_product(name, version, qualifiers, 'NULL')
+        return pd
 
     def dependencies(self, seeds = None):
         seeds = seeds or self.available()

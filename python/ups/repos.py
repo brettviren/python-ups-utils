@@ -13,10 +13,15 @@ class UpsRepo(object):
     The UPS repository as a database.
     '''
 
-    def __init__(self, products_path):
+    def __init__(self, products_path, verbose = False):
         if isinstance(products_path, type("")):
             products_path = products_path.split(":")
         self.products_path = [os.path.realpath(path) for path in products_path]
+        self._verbose = verbose
+
+    def chirp(self, msg):
+        if self._verbose:
+            print msg
 
     def available(self):
         '''
@@ -24,7 +29,7 @@ class UpsRepo(object):
         '''
         ret = []
         for base in self.products_path:
-            pdirs = glob(os.path.join(base, '*/v*.version/*'))
+            pdirs = glob(os.path.join(base, '*/*.version/*'))
             for d in pdirs:
                 sd = d[len(base)+1:]
                 pkg,ver_version, flavor_quals_ = sd.split('/')
@@ -47,7 +52,7 @@ class UpsRepo(object):
                 ret.append(maybe)
         return ret
         
-    def find_product(self, package, version, qualifiers, flavor):
+    def find_product(self, package, version, qualifiers, flavor = 'any'):
         '''
         Return Product object matching args to UPS product area layout.
         '''
@@ -56,23 +61,24 @@ class UpsRepo(object):
         want = set()
         if qualifiers:
             want = set(qualifiers.split(':'))
+
         for pd in avail:
-            #print 'find_product, check: "%s"' % str(pd)
+            #self.chirp('find_product, check: "%s"' % str(pd))
             if pd.name != package:
-                #print '\tname mismatch: "%s" != "%s"' %(pd.name, package)
+                #self.chirp('\tname mismatch: "%s" != "%s"' %(pd.name, package))
                 continue
             if pd.version != version:
-                #print '\tversion mismatch: "%s" != "%"' %( pd.version, version)
+                self.chirp('\tversion mismatch: "%s" != "%s"' %( pd.version, version))
                 continue
             if pd.flavor != flavor:
-                #print '\tflavor mismatch "%s" != "%s"' %(pd.flavor, flavor)
+                self.chirp('\tflavor mismatch "%s" != "%s"' %(pd.flavor, flavor))
                 continue
 
             have = set()
             if pd.quals:
                 have = set(pd.quals.split(":"))
             if have != want:
-                #print '\tquals mismatch "%s" != "%s"' %(want, have)
+                self.chirp('\tquals mismatch "%s" != "%s"' %(want, have))
                 continue
             return pd
 
