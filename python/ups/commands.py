@@ -11,40 +11,6 @@ from subprocess import Popen, PIPE, check_call
 import ups.products
 import ups.depend
 
-def install(version, products_dir, temp_dir = None):
-    '''
-    Install UPS <version> in <products_dir>, maybe using <temp_dir> to do the build.
-    '''
-    version_underscore = 'v' + version.replace('.','_')
-
-    if os.path.exists(os.path.join(products_dir, '.upsfiles')):
-        return 'Already installed into directory: %s' % os.path.realpath(products_dir)
-
-    if not os.path.exists(products_dir):
-        os.makedirs(products_dir)
-
-    temp_dir = temp_dir or tempfile.mkdtemp()
-    os.path.exists(temp_dir) or os.makedirs(temp_dir)
-    cwd = os.path.realpath(os.path.curdir)
-    os.chdir(temp_dir)
-    tarball = "ups-upd-%s-source.tar.bz2" % version
-    if not os.path.exists(tarball):
-        source_url = "http://oink.fnal.gov/distro/relocatable-ups/%s" % tarball
-        urllib.urlretrieve(source_url, tarball)
-    if not os.path.exists('.upsfiles'):
-        tf = tarfile.open(tarball)
-        tf.extractall()
-        os.chdir('ups/' + version_underscore)
-        check_call("./buildUps.sh " + temp_dir, shell='/bin/bash')
-        check_call("./tarUpsUpd.sh " + temp_dir, shell='/bin/bash')
-        os.chdir(temp_dir)
-
-    kernel, _,_,_, machine = os.uname()
-    want = "ups-upd-%s-%s*-%s.tar.bz2" % (version, kernel, machine)
-    bintarball = glob(want)[0]
-    tf = tarfile.open(bintarball)
-    tf.extractall(products_dir)
-    os.chdir(cwd)
 
 class UpsCommands(object):
     def __init__(self, path):
@@ -85,17 +51,55 @@ class UpsCommands(object):
         return self.ups("depend " + ups.products.product_to_upsargs(product))
 
     def avail(self):
-        '''Return available products as set of Product objects.'''
+        '''Return available products as list of Product objects.'''
         text = self.ups("list -aK+")
-        ret = set()
+        ret = list()
         for line in text.split('\n'):
             line = line.strip()
             if not line: continue
             pd = ups.products.upslisting_to_product(line) # note, no repo on purpose
-            ret.add(pd)
+            ret.append(pd)
         return ret
 
     def full_dependencies(self):
         '''Return a tree of entire dependencies'''
         pds = self.avail()
         return ups.depend.full(self, pds)
+
+
+
+
+def install(version, products_dir, temp_dir = None):
+    '''
+    Install UPS <version> in <products_dir>, maybe using <temp_dir> to do the build.
+    '''
+    version_underscore = 'v' + version.replace('.','_')
+
+    if os.path.exists(os.path.join(products_dir, '.upsfiles')):
+        return 'Already installed into directory: %s' % os.path.realpath(products_dir)
+
+    if not os.path.exists(products_dir):
+        os.makedirs(products_dir)
+
+    temp_dir = temp_dir or tempfile.mkdtemp()
+    os.path.exists(temp_dir) or os.makedirs(temp_dir)
+    cwd = os.path.realpath(os.path.curdir)
+    os.chdir(temp_dir)
+    tarball = "ups-upd-%s-source.tar.bz2" % version
+    if not os.path.exists(tarball):
+        source_url = "http://oink.fnal.gov/distro/relocatable-ups/%s" % tarball
+        urllib.urlretrieve(source_url, tarball)
+    if not os.path.exists('.upsfiles'):
+        tf = tarfile.open(tarball)
+        tf.extractall()
+        os.chdir('ups/' + version_underscore)
+        check_call("./buildUps.sh " + temp_dir, shell='/bin/bash')
+        check_call("./tarUpsUpd.sh " + temp_dir, shell='/bin/bash')
+        os.chdir(temp_dir)
+
+    kernel, _,_,_, machine = os.uname()
+    want = "ups-upd-%s-%s*-%s.tar.bz2" % (version, kernel, machine)
+    bintarball = glob(want)[0]
+    tf = tarfile.open(bintarball)
+    tf.extractall(products_dir)
+    os.chdir(cwd)

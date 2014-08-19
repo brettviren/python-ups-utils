@@ -5,25 +5,19 @@ Interact with UPS repositories
 
 import os
 from glob import glob
+import shelve
+import hashlib
 
 import networkx as nx
 
+from .commands import UpsCommands
+
 from .products import make_product, upslisting_to_product
-from . import depend
-
-
-def dependency_tree(uc):
-    '''
-    Return the full dependency for the given UPS command set <uc>
-    '''
-
-        
-        
-
+import ups.depend
 
 
 class UpsRepo(object):
-    '''A UpsRepo object embodies a snapshot of the state of a UPS
+    '''A UpsRepo object embodies a snapshot of the state of a single UPS
     products area.
 
     It consists of:
@@ -31,121 +25,92 @@ class UpsRepo(object):
     - a directory
     - a user script to setup to use the "ups" command in that area
     - a number of products
+
     '''
 
-    def __init__(self, directory):
-        self._directory = directory
-        self.uc = UpsCommands(os.path.join(directory, 'setups'))
-        
-        availtext = self.uc.avail()
-        ret = set()
-        for line in availtext.split('\n'):
-            pd = upslisting_to_product(line)
-            ret.add(pd)
+    def __init__(self, directory, cachedir = '~/.ups-util/cache/'):
+        self.uc = UpsCommands(directory)
+        self._repo_dir = directory
+        self._cache_dir = os.path.expanduser(os.path.expandvars(cachedir))
+        if not os.path.exists(self._cache_dir):
+            os.makedirs(self._cache_dir)
+
+    def _get_shelf(self, name = 'ups-repos'):
+        return shelve.open(os.path.join(self._cache_dir, name))
+
+    def _hash(self, products):
+        sha = hashlib.sha1()
+        for p in products:
+            sha.update(str(p))
+        return sha.hexdigest()
+
+    def tree(self):
+        '''
+        Return tree of dependencies
+        '''
+        products = self.uc.avail()
+
+        key = self._hash(products)
+        shelf = self._get_shelf()
+        dat = shelf.get(self._repo_dir, dict())
+        if dat.get('hash',None) == key:
+            shelf.close()
+            return dat['tree']
 
         tree = nx.DiGraph()
-
-    for pd in seeds:
-        text = uc.depend(pd)
-        ng = parse(text)
-        tree.add_nodes_from(ng.nodes())
-        tree.add_edges_from(ng.edges())
-
-        self.tree = depend.full(self.uc, ret)
+        for pd in products:
+            text = self.uc.depend(pd)
+            ng = ups.depend.parse(text)
+            tree.add_nodes_from(ng.nodes())
+            tree.add_edges_from(ng.edges())
         
+        dat = dict(hash = key, tree=tree)
+        shelf[self._repo_dir] = dat
+        shelf.close()
+        return tree
+
     def available(self):
         '''
         Return a list of available products in this repository, according to UPS.
         '''
-        return self.tree.nodes()
+        return self.tree().nodes()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class UpsRepoObsolete(object):
+def first_avail(repos):
     '''
-    The UPS repository as a database.
+    Return a list of available products among the repos in a first-come first-serve basis.
     '''
-
-    def __init__(self, products_path, verbose = False):
-        if isinstance(products_path, type("")):
-            products_path = products_path.split(":")
-        self.products_path = [os.path.realpath(path) for path in products_path]
-        self._verbose = verbose
-
-    def chirp(self, msg):
-        if self._verbose:
-            print msg
-
-    def available(self):
-        '''
-        Return list of Products objects available from the UPS products areas.
-        '''
-        ret = []
-        for base in self.products_path:
-            pdirs = glob(os.path.join(base, '*/*.version/*'))
-            for d in pdirs:
-                sd = d[len(base)+1:]
-                pkg,ver_version, flavor_quals_ = sd.split('/')
-                assert ver_version.endswith('.version')
-                ver = ver_version[:-len('.version')]
-                flavor, quals_ = flavor_quals_.split('_',1)
-                quals = ':'.join(quals_.split('_'))
-                pd = make_product(pkg, ver, quals, base, flavor)
-                ret.append(pd)
-        return ret
-
-    def setups_files(self, setups = 'setups'):
-        '''
-        Return the UPS "setups" file or None if not found
-        '''
-        ret = list()
-        for base in self.products_path:
-            maybe = os.path.join(base, setups)
-            if os.path.exists(maybe):
-                ret.append(maybe)
-        return ret
-        
-    def find_product(self, package, version, qualifiers, flavor = 'any'):
-        '''
-        Return Product object matching args to UPS product area layout.
-        '''
-        avail = self.available() # fixme: maybe needs caching?
-
-        want = set()
-        if qualifiers:
-            want = set(qualifiers.split(':'))
-
-        for pd in avail:
-            #self.chirp('find_product, check: "%s"' % str(pd))
-            if pd.name != package:
-                #self.chirp('\tname mismatch: "%s" != "%s"' %(pd.name, package))
+    ret = list()
+    seen = set()
+    for repo in repos:
+        for pd in repo.available():
+            pvqf = pd[:4]
+            if pvqf in seen:
                 continue
-            if pd.version != version:
-                self.chirp('\tversion mismatch: "%s" != "%s"' %( pd.version, version))
-                continue
-            if pd.flavor != flavor:
-                self.chirp('\tflavor mismatch "%s" != "%s"' %(pd.flavor, flavor))
-                continue
+            seen.add(pvqf)
+            ret.append(pd)
+    return ret
 
-            have = set()
-            if pd.quals:
-                have = set(pd.quals.split(":"))
-            if have != want:
-                self.chirp('\tquals mismatch "%s" != "%s"' %(want, have))
-                continue
-            return pd
+def first_pvqf(repos, package, version, qualifiers, flavor):
+    '''
+    Return the first matching product or non
+    '''
+    pvqf = (package, version, qualifiers, flavor)
+    for repo in repos:
+        for pd in repo.available(): # carries repo dir info
+            if pd[:4] == pvqf:
+                return pd
+
+def squash_trees(repos):
+    '''Return a tree which is the union of all repository trees with the
+    repo directory ignored.  '''
+
+    def strip(pd):
+        return make_product(*pd[:4])
+
+    stree = nx.DiGraph()
+    for repo in repos:
+        tree = repo.tree()
+        stree.add_nodes_from([strip(n) for n in tree.nodes()])
+        stree.add_edges_from([(strip(t),strip(h)) for t,h in tree.edges()])
+    return stree

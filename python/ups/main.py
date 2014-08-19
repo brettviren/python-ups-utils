@@ -14,6 +14,7 @@ from networkx import nx
 
 from ups.commands import UpsCommands, install as install_ups
 from ups.products import product_to_upsargs, upsargs_to_product, make_product
+import ups.repos
 
 @click.group()
 @click.option('-z','--products', envvar='PRODUCTS', multiple=True, type=click.Path(),
@@ -40,33 +41,30 @@ def init(ctx, tmp, version):
 @click.pass_context
 def avail(ctx):
     '''List available UPS packages'''
-    uc = ctx.obj['commands']
-    for pd in uc.avail():
+    repos = [ups.repos.UpsRepo(pdir) for pdir in ctx.obj['PRODUCTS']]
+    pds = ups.repos.first_avail(repos)
+    for pd in sorted(pds):
         click.echo(product_to_upsargs(pd))
 
 @cli.command()
 @click.option('-f','--flavor', 
               help="Limit the platform flavor")
-@click.option('-q','--qualifiers', 
+@click.option('-q','--qualifiers', default='',
               help="Limit the build qualifiers with a colon-separated list")
 @click.argument('package')
 @click.argument('version')
 @click.pass_context
 def resolve(ctx, flavor, qualifiers, package, version):
-    uc = ctx.obj['commands']
-    flavor = flavor or uc.flavor()
-    for pd in uc.avail():
-        if pd.name != package: continue
-        if pd.version != version: continue
-        if pd.flavor != flavor: continue
-        if set(pd.quals.split(":")) != set(qualifiers.split(":")): continue
+    repos = [ups.repos.UpsRepo(pdir) for pdir in ctx.obj['PRODUCTS']]
+    pd = ups.repos.first_pvqf(repos, package, version, qualifiers, flavor)
+    if pd:
         click.echo(product_to_upsargs(pd))
-        break
+    return
 
 @cli.command()
 @click.option('-f','--flavor', 
               help="Specify platform flavor")
-@click.option('-q','--qualifiers', 
+@click.option('-q','--qualifiers', default='',
               help="Specify build qualifiers as colon-separated list")
 @click.option('-F','--format', default = 'raw', type=click.Choice(['raw','dot']),
               help="Specify output format")
@@ -83,23 +81,13 @@ def depend(ctx, flavor, qualifiers, format, output, package, version):
     if format not in ['raw','dot']:
         raise RuntimeError, 'Unknown format: "%s"' % format
 
-    uc = ctx.obj['commands']
-    tree = uc.full_dependencies()
-    found = None
-    for pd in tree.nodes():
-        if pd.name != package: continue
-        if pd.version != version: continue
-        if pd.flavor != flavor: continue
-        if set(pd.quals.split(":")) != set(qualifiers.split(":")): continue
-        found = pd
-        break
-    if not found:
-        click.echo('Found no product matching %s %s -f "%s"-q "%s"' % \
-                   (pacakge, version, flavor, qualifiers))
-        sys.exit(1)
+    repos = [ups.repos.UpsRepo(pdir) for pdir in ctx.obj['PRODUCTS']]
+    tree = ups.repos.squash_trees(repos)
 
+    seed = make_product(package, version, qualifiers, flavor)
     subtree = nx.DiGraph()
-    subtree.add_edges_from(nx.bfs_edges(tree, found))
+    subtree.add_node(seed)
+    subtree.add_edges_from(nx.bfs_edges(tree, seed)) # this is a minimal rep
 
     if format == 'dot':
         from . import dot
@@ -107,7 +95,7 @@ def depend(ctx, flavor, qualifiers, format, output, package, version):
         open(output,'wb').write(text)
         
     # raw
-    print subtree.edges()
+    print '%d nodes, %d edges' % (len(subtree.nodes()), len(subtree.edges()))
 
 
 @cli.command()
@@ -136,6 +124,7 @@ def purge(ctx, no_op, package, version):
     '''
     Return candidates for purging if the given product were removed.
     '''
+
     tree = ctx.obj['tree']
     pds = tree.match(name=package, version=version)
     if not pds:

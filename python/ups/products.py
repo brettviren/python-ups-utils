@@ -5,11 +5,12 @@ Data objects and methods for UPS products
 
 from collections import namedtuple
 
-Product = namedtuple("Product",'name version quals repo flavor')
+Product = namedtuple("Product",'name version quals flavor repo')
 
-def make_product(name, version='', quals="", repo="", flavor=""):
+def make_product(name, version='', quals="", flavor="", repo=""):
     '''Create an object holding information about a UPS product.'''
-    return Product(name, version, quals, repo, flavor)
+    return Product(name, version, quals, flavor, repo)
+
 
 
 def product_to_upsargs(pd):
@@ -28,8 +29,10 @@ def product_to_upsargs(pd):
 
 def upslisting_to_product(string, repo=''):
     '''Convert from: '"pkg" "ver" "flav" "qual" "chain"' to Product (ignoring chain)'''
+
     pkg,ver,flav,qual,chain = [x.replace('"','') for x in string.split()]
-    return Product(pkg,ver,qual,repo,flav)
+
+    return make_product(pkg,ver,qual,flav,repo)
 
 def upsargs_to_product(string, **kwds):
     '''Convert from "pkg ver -f flav -z repo -q quals" to a Product'''
@@ -46,7 +49,7 @@ def upsargs_to_product(string, **kwds):
         ver = a[1]
     except IndexError:
         ver = ''
-    pd = make_product(pkg, ver, o.quals, o.repo, o.flavor)
+    pd = make_product(pkg, ver, o.quals, o.flavor, o.repo)
     return pd
 
 def parse_prodlist(text):
@@ -58,7 +61,7 @@ def parse_prodlist(text):
         line =line.strip()
         if not line: continue
         ver,pkg,flav,quals,repo = [x.replace('"','') for x in line.split()]
-        p = make_product(ver, pkg, quals, repo, flav)
+        p = make_product(ver, pkg, quals, flav, repo)
         ret.append(p)
     return ret
 

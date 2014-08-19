@@ -20,7 +20,7 @@ def parse_line(line):
         line = line[len(pre):]
         depth = len(pre)/3
 
-    quals = None
+    quals = ''
     chunks = line.split()
     if len(chunks) == 6:
         pkg,ver, f,flav, z,path = chunks
@@ -28,7 +28,7 @@ def parse_line(line):
         pkg,ver, f,flav, z,path, q,quals = chunks
     else:
         raise ValueError, 'parse failure for line: %s' % str(chunks)
-    return depth, make_product(pkg, ver, quals, path, flav)
+    return depth, make_product(pkg, ver, quals, flav, path)
 
 def parse(text):
     '''
