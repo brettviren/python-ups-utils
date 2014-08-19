@@ -11,6 +11,7 @@ from ups.commands import install, UpsCommands
 from ups.products import make_product
 
 ups_version = '5.0.5'
+ups_version_underscore = 'v' + ups_version.replace('.','_')
 ups_products = os.path.realpath('products')
 
 def setup():
@@ -21,21 +22,25 @@ def test_ups_depend():
     '''
     Test calling "ups depend".
     '''
-    ups = UpsCommands(ups_products)
+    uc = UpsCommands(ups_products)
 
-    prod = make_product('ups')
-    text = ups.depend(prod)
+    prod = make_product('ups', ups_version_underscore, flavor=uc.flavor())
+    #print 'PROD:',prod
+    assert prod.flavor
 
-    print text
-    assert text.startswith('ups v')
+    text = uc.depend_nocache(prod)
+    assert text.startswith('ups v'), '"%s"'%text
+
+    text2 = uc.depend(prod)
+    assert text == text2, '"%s"\n!=\n"%s"' % (text, text2)
 
 def test_ups_avail():
     '''
     Test calling "ups depend".
     '''
-    ups = UpsCommands(ups_products)
+    uc = UpsCommands(ups_products)
 
-    text = ups.avail()
-    print text
+    text = uc.avail()
+    #print text
 
 

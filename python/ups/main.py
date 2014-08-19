@@ -39,9 +39,9 @@ def init(ctx, tmp, version):
 @click.pass_context
 def avail(ctx):
     '''List available UPS packages'''
-    uc = ctx.obj['commands']
-    text = uc.avail()
-    click.echo(text)
+    tree = ctx.obj['tree']
+    for pd in tree.available():
+        click.echo(product_to_upsargs(pd))
 
 
 
@@ -70,6 +70,9 @@ def resolve(ctx, flavor, qualifiers, package, version):
 @click.argument('version')
 @click.pass_context
 def depend(ctx, flavor, qualifiers, format, output, package, version):
+    '''
+    Product dependency information for the given product.
+    '''
     format = format or os.path.splitext(output)[1][1:]
     if format not in ['raw','dot']:
         raise RuntimeError, 'Unknown format: "%s"' % format
@@ -108,6 +111,9 @@ def top(ctx):
 @click.argument('version')
 @click.pass_context
 def purge(ctx, flavor, qualifiers, no_op, package, version):
+    '''
+    Return candidates for purging if the given product were removed.
+    '''
     tree = ctx.obj['tree']
     pd = tree.resolve(package, version, qualifiers, flavor)
     if not pd:

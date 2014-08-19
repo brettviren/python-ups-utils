@@ -3,27 +3,36 @@
 Method for operating on the products tree
 '''
 
-from .repos import find_product
+from .repos import UpsRepo
 from . import depend
-from ups.products import product_to_upsargs, upsargs_to_product
+from ups.products import product_to_upsargs, upsargs_to_product, upslisting_to_product
 
 import networkx as nx
 
 class Tree(object):
     def __init__(self, commands):
         self.uc = commands
+        self.repo = UpsRepo(self.uc.products_path)
 
     def resolve(self, name ,version='', qualifiers='', flavor=''):
-        return find_product(self.uc.products, name, version, qualifiers, flavor or self.flavor())
+        return self.repo.find_product(name, version, qualifiers, flavor or self.uc.flavor())
 
     def dependencies(self, seeds = None):
-        return depend.full(self.uc, seeds or self.available())
+        seeds = seeds or self.available()
+        return depend.full(self.uc, seeds)
 
     def available(self):
-        return set([upsargs_to_product(line) for line in self.uc.avail().split('\n')])
+        availtext = self.uc.avail()
+        ret = set()
+        for line in availtext.split('\n'):
+            pd = upslisting_to_product(line)
+            ret.add(pd)
+
+        return ret
 
     def top(self):
-        return depend.roots(self.dependencies())
+        deps = self.dependencies()
+        return depend.roots(deps)
         
     def purge(self, seeds):
         full_tree = self.dependencies()

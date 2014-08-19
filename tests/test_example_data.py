@@ -1,21 +1,29 @@
 #!/usr/bin/env python
 '''
-Test using some example output from ups depend
+Test using some example output from ups depend without actually using ups
 '''
 
 import os
 from glob import glob
+import networkx as nx
+
 import ups.depend
 from ups.products import make_product, upsargs_to_product, product_to_upsargs
-import networkx as nx
+import ups.tree
+
 
 testdir = os.path.dirname(os.path.realpath(__file__))
 
 
 class FakeUC(object):
+    products_path = ('products',)
+
     def __init__(self, data_dir = os.path.join(testdir, 'example-data')):
         self.data_dir = data_dir
         return
+
+    def flavor(self):
+        return 'Linux64bit+2.6-2.12'
 
     def find_dump_file(self, pd):
         quals = pd.quals or ''
@@ -34,6 +42,13 @@ class FakeUC(object):
     def depend(self, pd):
         fname = self.find_dump_file(pd)
         return open(fname).read()
+
+def test_flavor():
+    '''
+    Make sure this platform has a doctored UPS flavor
+    '''
+    uc = FakeUC()
+    print uc.flavor()
 
 def test_parse_one():
     uc = FakeUC()
@@ -91,4 +106,25 @@ def test_parse_all():
         (len(tokill), len(tolive), full_tree.size())
     print 'Top to kill:\n', '\n'.join(['\t%s %s' % (p.name, p.version) for p in sorted(dead)])
     print 'To kill:\n', '\n'.join(['\t%s %s' % (p.name, p.version) for p in sorted(tokill)])
+    
+
+def _test_resolve():
+    tree = ups.tree.Tree(FakeUC())
+
+    package, version, qualifiers, flavor = ['larsoft', 'v02_00_00', 'e5:prof', 'Linux64bit+2.6-2.12']
+    pd = tree.resolve(package, version, qualifiers, flavor)
+    if not pd:
+        raise RuntimeError, 'Found no matching: p=%s v=%s q=%s f=%s' % (package,version,qualifiers,flavor)
+
+
+def _test_purge():
+    tree = ups.tree.Tree(FakeUC())
+
+    package, version, qualifiers, flavor = ['larsoft', 'v02_00_00', 'e5:prof', 'Linux64bit+2.6-2.12']
+    pd = tree.resolve(package, version, qualifiers, flavor)
+    if not pd:
+        raise RuntimeError, 'Found no matching package: %s %s %s %s' % (package,version,qualifiers,flavor)
+    tokill = tree.purge([pd])
+    ret = [product_to_upsargs(p) for p in sorted(tokill)]
+    print tokill
     

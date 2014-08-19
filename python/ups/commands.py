@@ -9,7 +9,7 @@ from glob import glob
 from subprocess import Popen, PIPE, check_call
 
 from . import products
-from .repos import find_setups
+from .repos import UpsRepo
 
 def install(version, products_dir, temp_dir = None):
     '''
@@ -47,14 +47,34 @@ def install(version, products_dir, temp_dir = None):
     os.chdir(cwd)
 
 class UpsCommands(object):
-    def __init__(self, path):
+    def __init__(self, path, cache = '~/.ups-util/cache/'):
         '''Create a UPS command set.  
 
         The <path> argument is path of UPS product areas.
         '''
-        self.products = path
-        self._setups = find_setups(path)
-        print 'Using UPS at %s' % self._setups
+        if isinstance(path, type("")):
+            path = path.split(":")
+        self.products_path = path
+        self.repo = UpsRepo(self.products_path)
+        
+        self._depcache = None
+        if cache:
+            cache = os.path.expanduser(os.path.expandvars(cache))
+            if not os.path.exists(cache):
+                os.makedirs(cache)
+            #self._depcache = shelve.open(os.path.join(cache,'depcache'))
+            self._depcache = os.path.join(cache,'depcache')
+
+    def _product_ident(self, pd):
+        '''
+        Return a unique string for the product <pd>.
+        '''
+        if not pd.repo:
+            new = self.repo.find_product(pd.name, pd.version, pd.quals, pd.flavor)
+            assert new, 'Found no product: "%s"' % str(pd)
+            pd = new
+        ret = str(pd)
+        return ret
 
     def ups(self, upscmdstr):
         '''
@@ -64,21 +84,40 @@ class UpsCommands(object):
 
         .ups("list -aK+")
         '''
-        cmd = ""
-        if self._setups:
-            cmd += ". %s && " % self._setups
-        cmd += "ups " + upscmdstr
-        #print 'CMD:',cmd
-        text = Popen(cmd, shell='/bin/bash', stdout = PIPE).communicate()[0]
+        return self.call(upscmdstr, cmd='ups')
+
+    def call(self, cmdstr, cmd='ups'):
+        cmdlist = list()
+        for setups in self.repo.setups_files():
+            cmdlist.append(". " + setups)
+        cmdlist.append(cmd + " " + cmdstr)
+        line = ' && '.join(cmdlist)
+        print 'UPS CMD:',line
+        text = Popen(line, shell='/bin/bash', stdout = PIPE).communicate()[0]
         return text
 
     def flavor(self):
         '''Return the output of "ups flavor"'''
         return self.ups("flavor").strip()
 
+    def depend_nocache(self, product):
+        return self.ups("depend " + products.product_to_upsargs(product))
+
     def depend(self, product):
         '''Run the "ups depend" command on the <product>'''
-        return self.ups("depend " + products.product_to_upsargs(product))
+        if not self._depcache:
+            return self.depend_nocache(product)
+
+        ident = self._product_ident(product)
+        import shelve
+        cache = shelve.open(self._depcache)
+        ret = cache.get(ident, None)
+        if ret: 
+            return ret
+        ret = self.depend_nocache(product)
+        cache[ident] = ret
+        cache.close()
+        return ret
         
 
     def avail(self):

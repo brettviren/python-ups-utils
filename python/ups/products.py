@@ -26,6 +26,11 @@ def product_to_upsargs(pd):
     return s
 
 
+def upslisting_to_product(string):
+    '''Convert from: '"pkg" "ver" "flav" "qual" "repo"' to Product'''
+    pkg,ver,flav,qual,chain = [x.replace('"','') for x in string.split()]
+    return Product(pkg,ver,qual,'',flav)
+
 def upsargs_to_product(string):
     '''Convert from "pkg ver -f flav -z repo -q quals" to a Product'''
     from optparse import OptionParser
