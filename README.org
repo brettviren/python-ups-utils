@@ -23,18 +23,34 @@ $ python setup.py develop
 
 * CLI
 
+There are a number of command line interfaces to the =ups= modules.
+
+ - =urman= :: UPS repository manager
+
+** =urman=
+
+General calling pattern:
+
 #+BEGIN_EXAMPLE
-$ ups-util [...]
+$ urman -z /path/to/repo [...] <cmd> [...cmd options...]
 #+END_EXAMPLE
 
-Examples:
+Some query examples which do not modify the UPS repository:
 
 #+BEGIN_EXAMPLE
-  $ ups-util -z /products avail
-  $ ups-util -z /products purge <package> <version>
-  $ ups-util -z /products depend <package> <version> -f <flavor> -q <quals> -F dot -o depend.dot
+  $ urman -z /products avail
+  $ urman -z /products top
+  $ urman -z /products depend <package> <version> -f <flavor> -q <quals> -F dot -o depend.dot
   $ dot -Tpng -odepend.png depend.dot
 #+END_EXAMPLE
+
+Operations which do modify the UPS repository:
+
+#+BEGIN_EXAMPLE
+  $ urman -z /products purge [--dryrun] <package> <version>
+#+END_EXAMPLE
+
+This purge should only remove products that are not required by other products which are outside the dependency tree formed by the given =<package>= and =<version>=.  Use =--dryrun= to see what directories would otherwise be removed.
 
 * Python
 
@@ -49,6 +65,11 @@ To set up for testing, install for development as above and
 
 Note, [[./tests/test_ups_commands.py]] downloads the source for UPS and builds it into [[./products/]].
 
-* Documentation
+
+* Caching
+
+Many UPS operations are slow on any reasonably sized repository.  The packages combats that with by retaining a cache of per-repository information.  By default this cache resides in =~/.ups-util/cache/=.  
+
+* More documentation
 
 See [[./doc/]].

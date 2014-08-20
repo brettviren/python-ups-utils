@@ -150,7 +150,7 @@ def purge(ctx, dryrun, package, version):
 
     if dryrun:
         for path in sorted(rmpaths):
-            print 'rm -rf %s' % path
+            click.echo(path)
         return
 
     # actually do the deed

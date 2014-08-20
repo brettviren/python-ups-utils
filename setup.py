@@ -14,7 +14,7 @@ setup(name = 'ups-util',
       ],
       entry_points = {
           'console_scripts': [
-              'ups-util = ups.main:main',
+              'urman = ups.urman:main',
           ]
       }
 )
