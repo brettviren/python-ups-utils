@@ -8,6 +8,7 @@ A main CLI to the ups modules
 
 import os
 import sys
+import shutil
 import click
 
 from networkx import nx
@@ -114,11 +115,11 @@ def top(ctx):
         click.echo(product_to_upsargs(p))
     
 @cli.command()
-@click.option('-n','--no-op', help="Dry run")
+@click.option('--dryrun/--no-dryrun', default=False, help="Dry run")
 @click.argument('package')
 @click.argument('version')
 @click.pass_context
-def purge(ctx, no_op, package, version):
+def purge(ctx, dryrun, package, version):
     '''
     Return candidates for purging if the given product were removed.
     '''
@@ -127,9 +128,10 @@ def purge(ctx, no_op, package, version):
     pds = ups.tree.match(tree.nodes(), name=package, version=version)
     if not pds:
         raise RuntimeError, 'No matches for name="%s" version="%s"' % (package,version)
-    print 'Targeting:'
-    for p in pds:
-        print '\t%s' % str(p)
+
+    #click.echo('Purging based on:')
+    #for pd in pds:
+    #    click.echo('\t'+str(pd))
 
     tokill = ups.tree.purge(tree, pds)
     rmpaths = set()
@@ -145,10 +147,16 @@ def purge(ctx, no_op, package, version):
             click.echo('warning: no such version directory: %s' % vpath)
             continue
         rmpaths.add(vpath)
-    for path in sorted(rmpaths):
-        print path
 
-    
+    if dryrun:
+        for path in sorted(rmpaths):
+            print 'rm -rf %s' % path
+        return
+
+    # actually do the deed
+    for path in sorted(rmpaths):
+        print 'removing: %s' % path
+        shutil.rmtree(path)
 
 def main():
     cli(obj={}, auto_envvar_prefix='UU')
