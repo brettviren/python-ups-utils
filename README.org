@@ -27,6 +27,15 @@ $ python setup.py develop
 $ ups-util [...]
 #+END_EXAMPLE
 
+Examples:
+
+#+BEGIN_EXAMPLE
+  $ ups-util -z /products avail
+  $ ups-util -z /products purge <package> <version>
+  $ ups-util -z /products depend <package> <version> -f <flavor> -q <quals> -F dot -o depend.dot
+  $ dot -Tpng -odepend.png depend.dot
+#+END_EXAMPLE
+
 * Python
 
 For examples, see [[./tests/]].
