@@ -18,6 +18,13 @@ def setup():
     install(ups_version, ups_products)
     
 
+def test_ups_flavor():
+    uc = UpsCommands(ups_products)
+    f = uc.flavor()
+    assert f
+    kern = os.uname()[0]
+    assert f.startswith(kern)
+
 def test_ups_depend():
     '''
     Test calling "ups depend".
@@ -44,6 +51,7 @@ def test_ups_avail():
     #print '\n'.join([str(p) for p in sorted(pds)])
     for p in pds:
         assert not p.repo
+        print p.name,p.version,p.flavor,p.quals
 
 def test_ups_deps():
     uc = UpsCommands(ups_products)

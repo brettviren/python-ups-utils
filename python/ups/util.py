@@ -4,6 +4,7 @@ General utilities.
 '''
 
 import re
+import urllib
 
 def match(things, **kwds):
     '''Return list of matching elements from sequence <things>.  
@@ -40,3 +41,13 @@ def match(things, **kwds):
         if match_one(thing):
             ret.append(thing)
     return ret
+
+def download(url, target):
+    fd = urllib.urlopen(url)
+    rc = fd.getcode() 
+    if rc == 200:
+        open(target,'wb').write(fd.read())
+    else:
+        raise RuntimeError, 'Failed to download (%d) %s' % (rc, url)
+    return target
+

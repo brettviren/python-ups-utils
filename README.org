@@ -21,6 +21,18 @@ Or, to set up for development
 $ python setup.py develop
 #+END_EXAMPLE
 
+
+* Glossary
+
+The UPS ecosystem and this package makes use of some specific terms.
+
+ - flavor :: a platform description
+ - qualifiers :: a list of tags indicating build variant
+ - version :: a string representing a release of a software package, usually in the form =vXX_YY_ZZ=
+ - product :: a build of a package of a given version, flavor and qualifiers
+ - suite :: a cohesive set of products
+ - repository :: a directory on disk holding installed products
+
 * CLI
 
 There are a number of command line interfaces to the =ups= modules.
@@ -29,38 +41,81 @@ There are a number of command line interfaces to the =ups= modules.
 
 ** =urman=
 
-General calling pattern:
+The =urman= program is divided into a number of commands.  It has 
+some general command line help as well as per-command help:
 
 #+BEGIN_EXAMPLE
-$ urman -z /path/to/repo [...] <cmd> [...cmd options...]
+  $ urman 
+  Usage: urman [OPTIONS] COMMAND [ARGS]...
+  ...
+  $ urman init --help
+  Usage: urman init [OPTIONS]
+  ...
 #+END_EXAMPLE
 
-Some query examples which do not modify the UPS repository:
+Additional examples are given below with details omitted.  See the per-command help for these details.
+
+*** Query a UPS repository
+
+You can make queries on an existing UPS repository.  For example to see what products are available (similar to =ups list -aK+=) or which products are considered "top level" (have no other products which depend on them.
 
 #+BEGIN_EXAMPLE
   $ urman -z /products avail
   $ urman -z /products top
-  $ urman -z /products depend <package> <version> -f <flavor> -q <quals> -F dot -o depend.dot
-  $ dot -Tpng -odepend.png depend.dot
 #+END_EXAMPLE
 
-Operations which do modify the UPS repository:
+You can also produce a tree of dependencies in "dot" format and render that into a graphic if you have the GraphViz package installed:
 
 #+BEGIN_EXAMPLE
-  $ urman -z /products purge [--dryrun] <package> <version>
+  $ urman -z /products depend <package> <version> -f <flavor> -q <quals> -F dot -o depend.dot [--full]
+  $ dot -Tpng -odepend.png depend.dot
+  $ display depend.png
 #+END_EXAMPLE
 
-This purge should only remove products that are not required by other products which are outside the dependency tree formed by the given =<package>= and =<version>=.  Use =--dryrun= to see what directories would otherwise be removed.
+*** Initialize a UPS repository:
+
+To initialize a directory as a UPS repository run:
+
+#+BEGIN_EXAMPLE
+  $ urman -z /path/to/products init
+#+END_EXAMPLE
+
+*** Install a suite of products
+
+You can install a suite of products based on a suite name, its version and probably a list of qualifiers:
+
+#+BEGIN_EXAMPLE
+  $ urman -z /path/to/products install lbne v02_05_01 -q e5:prof [--dryrun]
+#+END_EXAMPLE
+
+*** Purge products based on a top product
+
+Purging a UPS repository is done based no a given product.  Only this product and any product on which it depends are subject to purging.  If any candidate for purging is still needed by any remaining product it is not purged.
+
+#+BEGIN_EXAMPLE
+  $ urman -z /products top
+  ...
+  larsoft v02_05_01 -f Linux64bit+2.6-2.12 -z /data4/lbne/bv/pp-v02_05_01/products-urman -q e5:noifdh:prof
+  larsoft v02_05_01 -f Linux64bit+2.6-2.12 -z /data4/lbne/bv/pp-v02_05_01/products-urman -q e5:prof
+  ...
+  $ urman -z /products purge larsoft v02_05_01 [--dryrun]
+#+END_EXAMPLE
+
+** =updev=
+
+Watch this space.
+
+* Configuration
+
+TBD.  A configuration file mechanism will be added to allow setting command line options defaults and other parameters.
 
 * Python
 
-For examples, see [[./tests/]].
-
-To set up for testing, install for development as above and
+The bulk of the functionality of this package is in the form of Python modules in the =ups.= namespace.  There is fairly good unit test coverage of these modules in the [[./tests/]] sub-directory.  These tests can be exercised by first "installing" for development as above and adding the "nose" package and running its =nosetests= command
 
 #+BEGIN_EXAMPLE
   $ pip install nose
-  $ nosetests
+  $ nosetests [-s]
 #+END_EXAMPLE
 
 Note, [[./tests/test_ups_commands.py]] downloads the source for UPS and builds it into [[./products/]].
@@ -72,4 +127,4 @@ Many UPS operations are slow on any reasonably sized repository.  The packages c
 
 * More documentation
 
-See [[./doc/]].
+If you are lucky there is even more documentation under [[./doc/]].

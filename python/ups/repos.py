@@ -8,6 +8,7 @@ from glob import glob
 import shelve
 import hashlib
 import tarfile
+import tempfile
 
 import networkx as nx
 
@@ -79,17 +80,20 @@ class UpsRepo(object):
         '''
         return self.tree.nodes()
 
-    def install(self, me, tarfilepath):
+    def unpack(self, me, tarfilepath):
         '''
         Install the <tarball> corresponding to the ManifestEntry <me> to this repository.
-
-        Note, this unpacks the tarball regardless as to what may currently exist!
         '''
+        # test repo writability before getting started
+        tmpfd, tmpnam = tempfile.mkstemp(prefix='.ups-util-test-write-', dir=self._repo_dir)
+        os.close(tmpfd)
+        os.remove(tmpnam)
+
         tf = tarfile.open(tarfilepath)
         tf.extractall(self._repo_dir)
         shelf = self._get_shelf('ups-manifests')
         shelf[me.tarball] = tf.getnames()
-        return
+        return True
         
 
 

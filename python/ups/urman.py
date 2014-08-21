@@ -10,6 +10,7 @@ import os
 import sys
 import shutil
 import click
+import tempfile
 
 from networkx import nx
 
@@ -31,39 +32,19 @@ def cli(ctx, products):
     pass
 
 @cli.command()
-@click.option('-t','--tmp', help="Use given temporary directory for building.")
-@click.argument('version')
+@click.option('-t','--tmp', 
+              help="Use given temporary directory for building.")
+@click.option('-v','--version',default = '5.1.2',
+              help = "Version of UPS to use to prime the repository.")
 @click.pass_context
 def init(ctx, tmp, version):
     '''Initialize a UPS products area including installation of UPS'''
     products = ctx.obj['PRODUCTS'][0] or '.'
+    if version.startswith('v'):
+        version = version[1:].replace('_','.')
     msg = install_ups(version, products, tmp)
     if msg:
         click.echo(msg)
-
-@cli.command()
-@click.pass_context
-def avail(ctx):
-    '''List available UPS packages'''
-    repos = [ups.repos.UpsRepo(pdir) for pdir in ctx.obj['PRODUCTS']]
-    pds = ups.repos.first_avail(repos)
-    for pd in sorted(pds):
-        click.echo(product_to_upsargs(pd))
-
-@cli.command()
-@click.option('-f','--flavor', 
-              help="Limit the platform flavor")
-@click.option('-q','--qualifiers', default='',
-              help="Limit the build qualifiers with a colon-separated list")
-@click.argument('package')
-@click.argument('version')
-@click.pass_context
-def resolve(ctx, flavor, qualifiers, package, version):
-    repos = [ups.repos.UpsRepo(pdir) for pdir in ctx.obj['PRODUCTS']]
-    pd = ups.repos.first_pvqf(repos, package, version, qualifiers, flavor)
-    if pd:
-        click.echo(product_to_upsargs(pd))
-    return
 
 @cli.command()
 @click.option('-f','--flavor', 
@@ -74,10 +55,12 @@ def resolve(ctx, flavor, qualifiers, package, version):
               help="Specify output format")
 @click.option('-o','--output', default = '/dev/stdout', type=click.Path(),
               help="Specify output file")
+@click.option('--full', 'full', default=False, flag_value=True, 
+              help="Produce the full dependency tree instead of a minimal (single-path) graph.")
 @click.argument('package')
 @click.argument('version')
 @click.pass_context
-def depend(ctx, flavor, qualifiers, format, output, package, version):
+def depend(ctx, flavor, qualifiers, format, output, full, package, version):
     '''
     Product dependency information for the given product.
     '''
@@ -88,10 +71,14 @@ def depend(ctx, flavor, qualifiers, format, output, package, version):
     repos = [ups.repos.UpsRepo(pdir) for pdir in ctx.obj['PRODUCTS']]
     tree = ups.repos.squash_trees(repos)
 
+    flavor = flavor or repos[0].uc.flavor()
     seed = make_product(package, version, qualifiers, flavor)
     subtree = nx.DiGraph()
     subtree.add_node(seed)
     subtree.add_edges_from(nx.bfs_edges(tree, seed)) # this is a minimal rep
+    if full:
+        sg = tree.subgraph(subtree.nodes())
+        subtree.add_edges_from(sg.edges())
 
     if format == 'dot':
         from . import dot
@@ -165,63 +152,77 @@ def purge(ctx, dryrun, package, version):
         shutil.rmtree(path)
 
 
-@cli.command()
-@click.option('--dryrun/--no-dryrun', default=False, help="Dry run")
+
+@cli.command('install')
+@click.option('--dryrun', 'dryrun', default=False, flag_value=True, 
+              help="Dry run, do not modify the repository")
 @click.option('-m','--mirror', default='oink',
               help="Specify a mirror name")
-@click.option('-S','--suite',
-              help="Specify the suite")
-@click.option('-V','--suite-version',
-              help="Specify the suite version")
-@click.option('-Q','--suite-qualifiers',default = '',
-              help="Specify the suite version")
-
-@click.option('-f','--flavor', 
+@click.option('-f','--flavor',
               help="Specify platform flavor")
 @click.option('-q','--qualifiers', default='',
               help="Specify build qualifiers as colon-separated list")
-@click.argument('package')
+@click.option('--force', 'force', default=False, flag_value=True,
+              help='Add even if already installed')
+@click.option('-t','--tmp', 
+              help="Use given temporary directory for building.")
+@click.argument('suite')
 @click.argument('version')
 @click.pass_context
-def add_product(ctx, dryrun, mirror, suite, suite_version, suite_qualifiers, flavor, qualifiers, package, version):
-    '''Add the product from a suite to first configured repository.
+def install(ctx, dryrun, mirror, flavor, qualifiers, force, tmp, suite, version):
+    '''Install a suite worth of packages from a suite to first configured repository.
 
-    The <package> and <version> string may be prefaced with 're:' to
-    indicate that they should be interpreted as regular expressions
-    (not globs).  Otherwise they will be literally matched.
+    Note, qualifiers should match the suite's qualifier list
     '''
+    if not version.startswith('v') and version.count('.') > 0:
+        # it looks like we got a dotted version
+        version = 'v' + version.replace('.','_')
+
+    if qualifiers.count('-') > 0:
+        # actual URL uses '-' but keep all qualifiers in this CLI to ':'
+        qualifiers = qualifiers.replace('-','.')
+        
     uc = ctx.obj['commands']
     flavor = flavor or uc.flavor()
     mir = ups.mirror.make(mirror)
     if not mir:
         click.echo('No such mirror: "%s"' % mirror)
         sys.exit(1)
-    mes = mir.load_manifest(suite, suite_version, flavor, suite_qualifiers)
-    matdat = dict()
-    if flavor: matdat['flavor'] = flavor
-    if qualifiers: matdat['quals'] = qualifiers
-    if package: matdat['name'] = package
-    if version: matdat['version'] = version
-    matmes = ups.util.match(mes, **matdat)
+    matmes = mir.load_manifest(suite, version, flavor, qualifiers)
 
     repodir = ctx.obj['PRODUCTS'][0]
 
     if dryrun:
         print 'Dry-run, not installing these %d products' % len(matmes)
         for me in matmes:
+            pd = make_product(me.name, me.version, me.quals, me.flavor, repodir)
+            if uc.exists(pd):
+                print '\t%s -> %s (exists)' % (me.tarball, repodir)
+                continue
             print '\t%s -> %s' %(me.tarball, repodir)
         return
 
-    # fixme: make temp directory configurable
+    if not tmp:
+        tmpdir = tempfile.mkdtemp()
+    else:
+        if not os.path.exists(tmp):
+            os.makedirs(tmp)
+        tmpdir = tmp
+
     # fixme: move this block into the a module
+    # fixme: break this into full download-first before unpack?
     repo = ups.repos.UpsRepo(repodir)
-    import tempfile
-    tmpdir = tempfile.mkdtemp()
+
     for me in matmes:
+        pd = make_product(me.name, me.version, me.quals, me.flavor, repodir)
+        if uc.exists(pd):
+            print '\t%s -> %s/%s (skipped, exists)' %(mirror, tmpdir, me.tarball)
+            print '\t%s -> %s (skipped, exists)' % (me.tarball, repodir)
+            continue
         print '\t%s -> %s/%s' %(mirror, tmpdir, me.tarball)
         tfile = mir.download(me, tmpdir)
         print '\t%s -> %s' %(me.tarball, repodir)
-        repo.install(me, tfile)
+        repo.unpack(me, tfile)
 
     
 

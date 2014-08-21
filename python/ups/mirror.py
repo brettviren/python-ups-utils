@@ -11,7 +11,7 @@ import shelve
 import urllib
 
 from . import manifest
-
+from . import util
 
 
 
@@ -83,7 +83,7 @@ class Oink(object):
         print 'Downloading manifest: "%s"' % url
         mftext = manifest.download(url)
         if not mftext: 
-            raise RuntimeError, 'Failed to download: ' % url 
+            raise RuntimeError, 'Failed to download: %s' % url 
             return
 
         mflist = self.add_manifest(mfname, mftext)
@@ -108,13 +108,7 @@ class Oink(object):
             else:
                 return target
         url = self.tarball_urlpat.format(name=me.name, tarball=me.tarball)
-        fd = urllib.urlopen(url)
-        rc = fd.getcode() 
-        if rc == 200:
-            open(target,'wb').write(fd.read())
-        else:
-            raise RuntimeError, 'Failed to download %s' % target
-        return target
+        return util.download(url, target)
         
 
 
