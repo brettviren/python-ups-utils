@@ -30,18 +30,6 @@ root v5_34_18d -f Linux64bit+2.6-2.12 -z /afs/rhic.bnl.gov/lbne/software/product
 '''
 
 from ups.depend import parse
-from ups.nodetools import walk as nodewalk
-
-def dump(node):
-    for n, rents in nodewalk(node):
-        depth = len(rents)
-        print '%s(%s %s)' % ('..'*depth, node.payload.name, node.payload.version)
-
-def dump2(node):
-    for n, rents in nodewalk(node):
-        depth = len(rents)
-        rents.append(n)
-        print ''.join(['(%s %s)' % (x.payload.name, x.payload.version) for x in rents])
 
 def test_parse_root():
     graph = parse(root_dep)
