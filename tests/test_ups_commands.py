@@ -52,3 +52,13 @@ def test_ups_deps():
     assert 0 == len(tree.edges())
     for pd in tree.nodes():
         assert pd.repo, str(pd)
+
+def test_failure():
+    uc = UpsCommands(ups_products)
+
+    try:
+        out = uc.call('',cmd='/bin/false')
+    except RuntimeError,err:
+        print 'Caught expected error: %s' % err
+    else:
+        raise Exception,'That command should have failed'

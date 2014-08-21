@@ -39,9 +39,16 @@ class UpsCommands(object):
             cmdlist.append(". %s/setups" % pdir)
         cmdlist.append(cmd + " " + cmdstr)
         line = ' && '.join(cmdlist)
-        print 'UPS CMD:',line
-        text = Popen(line, shell='/bin/bash', stdout = PIPE).communicate()[0]
-        return text
+        #print 'UPS CMD:',line
+        p = Popen(line, shell='/bin/bash', stdout = PIPE)
+        out,err = p.communicate()
+        if p.returncode != 0:
+            print 'STDOUT:'
+            print out or ''
+            print 'STDERR:'
+            print err or ''
+            raise RuntimeError, 'Command failed: "%s"' % line
+        return out
 
     def flavor(self):
         '''Return the output of "ups flavor"'''
@@ -49,6 +56,9 @@ class UpsCommands(object):
 
     def depend(self, product):
         return self.ups("depend " + ups.products.product_to_upsargs(product))
+
+    def exists(self, product):
+        return self.ups("exist " + ups.products.product_to_upsargs(product))
 
     def avail(self):
         '''Return available products as list of Product objects.'''

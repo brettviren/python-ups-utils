@@ -2,7 +2,6 @@
 '''
 Method for operating on the products tree
 '''
-import re
 import networkx as nx
 
 #from .repos import UpsRepo
@@ -11,34 +10,6 @@ import networkx as nx
 
 import networkx as nx
 
-def match(products, **kwds):
-    '''Return list of matching products.  
-
-    The <kwds> hold things to match on.  Keys should match
-    arguments of products.Product and values be regular
-    expressions (not globs).  Unknown keys are ignored.
-    '''
-    def match_one(pd):
-        for k,v in kwds.items():
-            string = getattr(pd, k, None)
-            if string is None:
-                continue
-            m = re.match(v, string)
-            if not m:
-                return
-            g = m.group()
-            if not g:
-                return
-            if g != m.string:
-                return
-            continue
-        return pd
-
-    ret = list()
-    for pd in products:
-        if match_one(pd):
-            ret.append(pd)
-    return ret
 
 def top_nodes(graph):
     top_nodes = set(graph.nodes())

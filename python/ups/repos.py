@@ -7,6 +7,7 @@ import os
 from glob import glob
 import shelve
 import hashlib
+import tarfile
 
 import networkx as nx
 
@@ -29,6 +30,8 @@ class UpsRepo(object):
     '''
 
     def __init__(self, directory, cachedir = '~/.ups-util/cache/'):
+        if not os.path.exists(directory):
+            raise RuntimeError, 'No such directory: "%s"' % directory
         self.uc = UpsCommands(directory)
         self._repo_dir = directory
         self._cache_dir = os.path.expanduser(os.path.expandvars(cachedir))
@@ -75,6 +78,19 @@ class UpsRepo(object):
         Return a list of available products in this repository, according to UPS.
         '''
         return self.tree.nodes()
+
+    def install(self, me, tarfilepath):
+        '''
+        Install the <tarball> corresponding to the ManifestEntry <me> to this repository.
+
+        Note, this unpacks the tarball regardless as to what may currently exist!
+        '''
+        tf = tarfile.open(tarfilepath)
+        tf.extractall(self._repo_dir)
+        shelf = self._get_shelf('ups-manifests')
+        shelf[me.tarball] = tf.getnames()
+        return
+        
 
 
 def first_avail(repos):

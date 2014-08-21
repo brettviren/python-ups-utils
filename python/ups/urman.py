@@ -17,6 +17,8 @@ from ups.commands import UpsCommands, install as install_ups
 from ups.products import product_to_upsargs, upsargs_to_product, make_product
 import ups.repos
 import ups.tree
+import ups.util
+import ups.mirror
 
 @click.group()
 @click.option('-z','--products', envvar='PRODUCTS', multiple=True, type=click.Path(),
@@ -122,10 +124,14 @@ def top(ctx):
 def purge(ctx, dryrun, package, version):
     '''
     Return candidates for purging if the given product were removed.
+
+    The <package> and <version> string may be prefaced with 're:' to
+    indicate that they should be interpreted as regular expressions
+    (not globs).  Otherwise they will be literally matched.
     '''
     repos = [ups.repos.UpsRepo(pdir) for pdir in ctx.obj['PRODUCTS']]
     tree = ups.repos.squash_trees(repos)
-    pds = ups.tree.match(tree.nodes(), name=package, version=version)
+    pds = ups.util.match(tree.nodes(), name=package, version=version)
     if not pds:
         raise RuntimeError, 'No matches for name="%s" version="%s"' % (package,version)
 
@@ -157,6 +163,67 @@ def purge(ctx, dryrun, package, version):
     for path in sorted(rmpaths):
         print 'removing: %s' % path
         shutil.rmtree(path)
+
+
+@cli.command()
+@click.option('--dryrun/--no-dryrun', default=False, help="Dry run")
+@click.option('-m','--mirror', default='oink',
+              help="Specify a mirror name")
+@click.option('-S','--suite',
+              help="Specify the suite")
+@click.option('-V','--suite-version',
+              help="Specify the suite version")
+@click.option('-Q','--suite-qualifiers',default = '',
+              help="Specify the suite version")
+
+@click.option('-f','--flavor', 
+              help="Specify platform flavor")
+@click.option('-q','--qualifiers', default='',
+              help="Specify build qualifiers as colon-separated list")
+@click.argument('package')
+@click.argument('version')
+@click.pass_context
+def add_product(ctx, dryrun, mirror, suite, suite_version, suite_qualifiers, flavor, qualifiers, package, version):
+    '''Add the product from a suite to first configured repository.
+
+    The <package> and <version> string may be prefaced with 're:' to
+    indicate that they should be interpreted as regular expressions
+    (not globs).  Otherwise they will be literally matched.
+    '''
+    uc = ctx.obj['commands']
+    flavor = flavor or uc.flavor()
+    mir = ups.mirror.make(mirror)
+    if not mir:
+        click.echo('No such mirror: "%s"' % mirror)
+        sys.exit(1)
+    mes = mir.load_manifest(suite, suite_version, flavor, suite_qualifiers)
+    matdat = dict()
+    if flavor: matdat['flavor'] = flavor
+    if qualifiers: matdat['quals'] = qualifiers
+    if package: matdat['name'] = package
+    if version: matdat['version'] = version
+    matmes = ups.util.match(mes, **matdat)
+
+    repodir = ctx.obj['PRODUCTS'][0]
+
+    if dryrun:
+        print 'Dry-run, not installing these %d products' % len(matmes)
+        for me in matmes:
+            print '\t%s -> %s' %(me.tarball, repodir)
+        return
+
+    # fixme: make temp directory configurable
+    # fixme: move this block into the a module
+    repo = ups.repos.UpsRepo(repodir)
+    import tempfile
+    tmpdir = tempfile.mkdtemp()
+    for me in matmes:
+        print '\t%s -> %s/%s' %(mirror, tmpdir, me.tarball)
+        tfile = mir.download(me, tmpdir)
+        print '\t%s -> %s' %(me.tarball, repodir)
+        repo.install(me, tfile)
+
+    
 
 def main():
     cli(obj={}, auto_envvar_prefix='UU')
