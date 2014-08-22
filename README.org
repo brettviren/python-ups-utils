@@ -9,13 +9,17 @@ Optional, pre-install for virtualenv-based installation:
   $ source venv/bin/activate
 #+END_EXAMPLE
 
-The actual installation:
+This provides a self-contained installation and run-time area with some Python features (such as =setuptools=) that your OS may not have.
+
+The actual installation is then done:
 
 #+BEGIN_EXAMPLE
-$ python setup.py install
+$ python setup.py install [--user]
 #+END_EXAMPLE
 
-Or, to set up for development
+You may include =--user= to install into your home area instead into the system area.
+
+Alternatively, to set up for development so that any edits to the source are immediately available:
 
 #+BEGIN_EXAMPLE
 $ python setup.py develop
