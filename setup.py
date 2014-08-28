@@ -1,5 +1,5 @@
 from setuptools import setup
-setup(name = 'ups-util',
+setup(name = 'ups-utils',
       version = '0.0',
       description = 'UPS Utilities',
       author = 'Brett Viren',
