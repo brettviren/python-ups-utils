@@ -10,7 +10,7 @@ import os
 from ups.commands import install, UpsCommands
 from ups.products import make_product
 
-ups_version = '5.0.5'
+ups_version = '5.1.2'
 ups_version_underscore = 'v' + ups_version.replace('.','_')
 ups_products = os.path.realpath('products')
 
@@ -56,8 +56,8 @@ def test_ups_avail():
 def test_ups_deps():
     uc = UpsCommands(ups_products)
     tree = uc.full_dependencies()
-    assert 2 == len(tree.nodes())
-    assert 0 == len(tree.edges())
+    assert 1 == len(tree.nodes()), tree.nodes()
+    assert 0 == len(tree.edges()), tree.edges()
     for pd in tree.nodes():
         assert pd.repo, str(pd)
 
