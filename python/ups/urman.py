@@ -168,6 +168,28 @@ def manifest_urls(ctx, mirror, limit):
     click.echo('\n'.join(manifests))
 
 
+@cli.command('manifest')
+@click.option('-m','--mirror', default='oink',
+              help="Specify a mirror name")
+@click.option('-f','--flavor',
+              help="Specify platform flavor")
+@click.option('-q','--qualifiers', default='',
+              help="Specify build qualifiers as colon-separated list")
+@click.argument('suite')
+@click.argument('version')
+@click.pass_context
+def dump_manifest(ctx, mirror, flavor, qualifiers, suite, version):
+    '''
+    Dump a manifest
+    '''
+    mir = ups.mirror.make(mirror)
+    if not mir:
+        click.echo('No such mirror: "%s"' % mirror)
+        sys.exit(1)
+    matmes = mir.load_manifest(suite, version, flavor, qualifiers)
+    for me in matmes:
+        click.echo('%16s %12s %20s %s' % (me.name, me.version, me.flavor, me.quals))
+
 @cli.command('install')
 @click.option('--dryrun', 'dryrun', default=False, flag_value=True, 
               help="Dry run, do not modify the repository")

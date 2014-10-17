@@ -111,42 +111,23 @@ class Oink(object):
         url = self.tarball_urlpat.format(name=me.name, tarball=me.tarball, server=self.server)
         return util.download(url, target)
         
-
-def get_suites_lxml(server):
-    if server == 'oink':        # fixme factor out
-        url = 'http://oink.fnal.gov/distro/manifest/'
-    html = util.slurp_lxml(url)
-    suites = set()
-    for line in html.xpath('//a/text()'):
-        if line.endswith('/'):
-            suites.add(line[-1])
-            continue
-        if line.endswith('_MANIFEST.txt'):
-            suites.add(line.split('-')[0])
-    return suites
-
-def get_suites_bs(server):
-    if server == 'oink':        # fixme factor out
-        url = 'http://oink.fnal.gov/distro/manifest/'
-    html = util.slurp_bs(url)
-    suites = set()
-    for line in html.findAll('a'):
-        line = line.get('href')
-        if line.endswith('/'):
-            s = line[:-1]
-            if not s.startswith('/'):
-                suites.add(s)
-            continue
-        if line.endswith('_MANIFEST.txt'):
-            suites.add(line.split('-')[0])
-    return suites
-    
+class Scisoft(Oink):
+    server='scisoft.fnal.gov'
+    tarball_urlpat = 'http://{server}/distro/packages/{name}/{tarball}'
+    manifest_urlpat = 'http://{server}/scisoft/manifest/{suite}/{version}/{manifest}'
+    manifest_binpat = '{suite}-{version_dotted}-{flavor}-{quals_dashed}_MANIFEST.txt'
+    manifest_srcpat = '{suite}-{version_dotted}-source_MANIFEST.txt'
+    pass
     
 def find_manifests(server, limit = None):
     '''Return a list of URLs to all manifest files found.
 
     The URL patterns for manifest files must be like:
     # <url>/<suite>/v<version_underscore>/*_MANIFEST.txt
+
+    Note, this assumes simple Apache index lists and fails to work on
+    the idiocy that is served by the new scisoft server.
+
     '''
 
     if server == 'oink':        # fixme factor out
@@ -182,4 +163,6 @@ def find_manifests(server, limit = None):
 def make(name = 'oink', *args, **kwds):
     if name == 'oink':
         return Oink(*args, **kwds)
+    if name == 'scisoft':
+        return Scisoft(*args, **kwds)
     KeyError, 'Unknown ups mirror: "%s"' % name
