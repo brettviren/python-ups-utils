@@ -153,6 +153,21 @@ def purge(ctx, dryrun, package, version):
 
 
 
+@cli.command('manifest-urls')
+@click.option('-m','--mirror', default='oink',
+              help="Specify a mirror name")
+@click.option('-l','--limit', multiple=True,
+              help="Limit to one or more suites")
+@click.pass_context
+def manifest_urls(ctx, mirror, limit):
+    print 'Limiting:',str(limit)
+    manifests = ups.mirror.find_manifests(mirror, limit)
+    if not manifests:
+        click.echo('No manifests for mirror "%s" %s' % (mirror, ', '.join(limit)))
+        return
+    click.echo('\n'.join(manifests))
+
+
 @cli.command('install')
 @click.option('--dryrun', 'dryrun', default=False, flag_value=True, 
               help="Dry run, do not modify the repository")
