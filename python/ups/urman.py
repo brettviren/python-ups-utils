@@ -154,7 +154,7 @@ def purge(ctx, dryrun, package, version):
 
 
 @cli.command('manifest-urls')
-@click.option('-m','--mirror', default='oink',
+@click.option('-m','--mirror', default='scisoft',
               help="Specify a mirror name")
 @click.option('-l','--limit', multiple=True,
               help="Limit to one or more suites")
@@ -169,7 +169,7 @@ def manifest_urls(ctx, mirror, limit):
 
 
 @cli.command('manifest')
-@click.option('-m','--mirror', default='oink',
+@click.option('-m','--mirror', default='scisoft',
               help="Specify a mirror name")
 @click.option('-f','--flavor',
               help="Specify platform flavor")
@@ -188,12 +188,12 @@ def dump_manifest(ctx, mirror, flavor, qualifiers, suite, version):
         sys.exit(1)
     matmes = mir.load_manifest(suite, version, flavor, qualifiers)
     for me in matmes:
-        click.echo('%16s %12s %20s %s' % (me.name, me.version, me.flavor, me.quals))
+        click.echo('%16s %16s %20s %s' % (me.name, me.version, me.flavor, me.quals))
 
 @cli.command('install')
 @click.option('--dryrun', 'dryrun', default=False, flag_value=True, 
               help="Dry run, do not modify the repository")
-@click.option('-m','--mirror', default='oink',
+@click.option('-m','--mirror', default='scisoft',
               help="Specify a mirror name")
 @click.option('-f','--flavor',
               help="Specify platform flavor")
@@ -211,13 +211,14 @@ def install(ctx, dryrun, mirror, flavor, qualifiers, force, tmp, suite, version)
 
     Note, qualifiers should match the suite's qualifier list
     '''
+    repodir = ctx.obj['PRODUCTS'][0]
     if not version.startswith('v') and version.count('.') > 0:
         # it looks like we got a dotted version
         version = 'v' + version.replace('.','_')
 
-    if qualifiers.count('-') > 0:
-        # actual URL uses '-' but keep all qualifiers in this CLI to ':'
-        qualifiers = qualifiers.replace('-','.')
+    # there are lots of conventions for qualifiers delimiters in use
+    # by Fermilab.  This uses :'s
+    qualifiers = qualifiers.replace('-',':').replace('-',':')
         
     uc = ctx.obj['commands']
     flavor = flavor or uc.flavor()
@@ -226,8 +227,6 @@ def install(ctx, dryrun, mirror, flavor, qualifiers, force, tmp, suite, version)
         click.echo('No such mirror: "%s"' % mirror)
         sys.exit(1)
     matmes = mir.load_manifest(suite, version, flavor, qualifiers)
-
-    repodir = ctx.obj['PRODUCTS'][0]
 
     if dryrun:
         print 'Dry-run, not installing these %d products' % len(matmes)

@@ -108,12 +108,12 @@ class Oink(object):
                 os.remove(target)
             else:
                 return target
-        url = self.tarball_urlpat.format(name=me.name, tarball=me.tarball, server=self.server)
+        url = self.tarball_urlpat.format(name=me.name, version=me.version, tarball=me.tarball, server=self.server)
         return util.download(url, target)
         
 class Scisoft(Oink):
     server='scisoft.fnal.gov'
-    tarball_urlpat = 'http://{server}/distro/packages/{name}/{tarball}'
+    tarball_urlpat = 'http://{server}/scisoft/packages/{name}/{version}/{tarball}'
     manifest_urlpat = 'http://{server}/scisoft/manifest/{suite}/{version}/{manifest}'
     manifest_binpat = '{suite}-{version_dotted}-{flavor}-{quals_dashed}_MANIFEST.txt'
     manifest_srcpat = '{suite}-{version_dotted}-source_MANIFEST.txt'
@@ -160,7 +160,7 @@ def find_manifests(server, limit = None):
     
     
 
-def make(name = 'oink', *args, **kwds):
+def make(name = 'scisoft', *args, **kwds):
     if name == 'oink':
         return Oink(*args, **kwds)
     if name == 'scisoft':

@@ -36,6 +36,8 @@ The UPS ecosystem and this package makes use of some specific terms.
  - product :: a build of a package of a given version, flavor and qualifiers
  - suite :: a cohesive set of products
  - repository :: a directory on disk holding installed products
+ - manifest :: a text file listing the products in a suite
+ - mirror :: a server holding manifests and products packaged as tar files
 
 * CLI
 
