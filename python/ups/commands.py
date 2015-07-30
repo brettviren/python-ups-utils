@@ -107,10 +107,11 @@ def install(version, products_dir, temp_dir = None):
     os.path.exists(temp_dir) or os.makedirs(temp_dir)
 
     srctarball = "ups-%s-source.tar.bz2" % version
+    srcsvrpath = "v%s/ups-%s-source.tar.bz2" % (version.replace(".", "_"), version)
     srctarpath = os.path.join(temp_dir, srctarball)
     if not os.path.exists(srctarpath):
         #source_url = "http://oink.fnal.gov/distro/relocatable-ups/%s" % srctarball
-        source_url = "http://oink.fnal.gov/distro/packages/ups/%s" % srctarball
+        source_url = "http://scisoft.fnal.gov/scisoft/packages/ups/%s" % srcsvrpath
         ups.util.download(source_url, srctarpath)
 
     stf = tarfile.open(srctarpath)

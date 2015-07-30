@@ -34,7 +34,7 @@ def cli(ctx, products):
 @cli.command()
 @click.option('-t','--tmp', 
               help="Use given temporary directory for building.")
-@click.option('-v','--version',default = '5.1.2',
+@click.option('-v','--version',default = '5.1.5',
               help = "Version of UPS to use to prime the repository.")
 @click.pass_context
 def init(ctx, tmp, version):
