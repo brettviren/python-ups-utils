@@ -47,9 +47,9 @@ def init(ctx, tmp, version):
         click.echo(msg)
 
 @cli.command()
-@click.option('-f','--flavor', 
+@click.option('-f','--flavor', default='Linux64bit+2.6-2.12-s5-e6'
               help="Specify platform flavor")
-@click.option('-q','--qualifiers', default='',
+@click.option('-q','--qualifiers', default='prof',
               help="Specify build qualifiers as colon-separated list")
 @click.option('-F','--format', default = 'raw', type=click.Choice(['raw','dot']),
               help="Specify output format")
