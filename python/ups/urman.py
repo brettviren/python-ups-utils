@@ -34,7 +34,7 @@ def cli(ctx, products):
 @cli.command()
 @click.option('-t','--tmp', 
               help="Use given temporary directory for building.")
-@click.option('-v','--version',default = '5.1.2',
+@click.option('-v','--version',default = '5.1.5',
               help = "Version of UPS to use to prime the repository.")
 @click.pass_context
 def init(ctx, tmp, version):
@@ -47,9 +47,9 @@ def init(ctx, tmp, version):
         click.echo(msg)
 
 @cli.command()
-@click.option('-f','--flavor', 
+@click.option('-f','--flavor', default='Linux64bit+2.6-2.12'
               help="Specify platform flavor")
-@click.option('-q','--qualifiers', default='',
+@click.option('-q','--qualifiers', default='s14:e7:prof',
               help="Specify build qualifiers as colon-separated list")
 @click.option('-F','--format', default = 'raw', type=click.Choice(['raw','dot']),
               help="Specify output format")
