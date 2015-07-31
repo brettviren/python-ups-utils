@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(name = 'ups-utils',
-      version = '0.2',
+      version = '0.3',
       description = 'UPS Utilities',
       author = 'Brett Viren',
       author_email = 'brett.viren@gmail.com',
