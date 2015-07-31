@@ -114,7 +114,7 @@ class Oink(object):
 class Scisoft(Oink):
     server='scisoft.fnal.gov'
     tarball_urlpat = 'http://{server}/scisoft/packages/{name}/{version}/{tarball}'
-    manifest_urlpat = 'http://{server}/scisoft/manifest/{suite}/{version}/{manifest}'
+    manifest_urlpat = 'http://{server}/scisoft/bundles/{suite}/{version}/manifest/{manifest}'
     manifest_binpat = '{suite}-{version_dotted}-{flavor}-{quals_dashed}_MANIFEST.txt'
     manifest_srcpat = '{suite}-{version_dotted}-source_MANIFEST.txt'
     pass
