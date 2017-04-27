@@ -88,7 +88,28 @@ class UpsCommands(object):
         return ups.depend.full(self, pds)
 
 
-
+    def userenv(self, product):
+        '''
+        Best effort to return the environment after "setting up" the product.
+        '''
+        cmdstr="%s %s -q %s && env" % (product.name, product.version, product.quals)
+        text = self.call(cmdstr, "setup")
+        ret = dict()
+        for line in text.split('\n'):
+            if line.startswith("BASH_FUNC"):
+                continue
+            if line.startswith(" "):
+                continue
+            if line.startswith("}"):
+                continue
+            if "=" not in line:
+                continue
+            line = line.strip()
+            if not line:
+                continue
+            var,val = line.split("=",1)
+            ret[var] = val
+        return ret
 
 def install(version, products_dir, temp_dir = None):
     '''

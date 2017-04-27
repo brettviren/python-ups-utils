@@ -306,10 +306,26 @@ def view(ctx, action, exclude, dependencies, quals, package, version, path):
         return 1
     seed = prods[0]
     click.echo("Found: %s" % (seed,))
-    prods = nx.algorithms.descendants(tree, seed)
-    prods.add(seed)
-    for p in sorted(prods):
-        click.echo(str(p))
+    uc = ctx.obj['commands']
+    uenv = uc.userenv(seed)
+    for var,path in [('PATH','bin'), ('LD_LIBRARY_PATH','lib')]:
+        click.echo(var)
+        for one in uenv[var].split(':'):
+            repo = None
+            for r in repos:
+                if one.startswith(r._repo_dir):
+                    repo = r
+                    break
+            if not repo:
+                continue
+            # now link it into path
+            click.echo('\t' + one)
+                            
+
+    # prods = nx.algorithms.descendants(tree, seed)
+    # prods.add(seed)
+    # for p in sorted(prods):
+    #     click.echo(str(p))
 
 
 def main():
