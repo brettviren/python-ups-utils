@@ -14,7 +14,7 @@ import networkx as nx
 
 from .commands import UpsCommands
 
-from .products import make_product, upslisting_to_product
+from .products import Product, upslisting_to_product
 import ups.depend
 
 
@@ -46,7 +46,7 @@ class UpsRepo(object):
     def _hash(self, products):
         sha = hashlib.sha1()
         for p in products:
-            sha.update(str(p))
+            sha.update(str(p).encode('utf-8'))
         return sha.hexdigest()
 
     def _update(self):
@@ -127,7 +127,7 @@ def squash_trees(repos):
     repo directory ignored.  '''
 
     def strip(pd):
-        return make_product(*pd[:4])
+        return Product(*pd[:4])
 
     stree = nx.DiGraph()
     for repo in repos:

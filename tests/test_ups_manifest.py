@@ -3,7 +3,7 @@
 Test ups.manifest
 '''
 
-from ups.products import make_product
+from ups.products import Product
 from ups.manifest import parse_line, form_url, download, parse_text
 
 def test_parse_line():
@@ -23,7 +23,7 @@ def test_parse_line():
     assert p2.quals=='e5:prof'
 
 def test_form_url():
-    pd = make_product('nu', 'v1_10_00a', 'e5:prof', 'Linux64bit+2.6-2.5')
+    pd = Product('nu', 'v1_10_00a', 'e5:prof', 'Linux64bit+2.6-2.5')
     want = 'http://oink.fnal.gov/distro/manifest/nu/v1_10_00a/nu-1.10.00a-Linux64bit+2.6-2.5-e5-prof_MANIFEST.txt'
     got = form_url(pd)
     if not got == want:

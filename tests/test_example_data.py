@@ -8,7 +8,7 @@ from glob import glob
 import networkx as nx
 
 import ups.depend
-from ups.products import make_product, upsargs_to_product, product_to_upsargs
+from ups.products import Product, upsargs_to_product, product_to_upsargs
 import ups.tree
 
 
@@ -52,7 +52,7 @@ def test_flavor():
 
 def test_parse_one():
     uc = FakeUC()
-    pd = make_product('ups', 'v5_0_5', flavor='Linux64bit+2.6-2.12')
+    pd = Product('ups', 'v5_0_5', flavor='Linux64bit+2.6-2.12')
     deptext = uc.depend(pd)
     graph1 = ups.depend.parse(deptext)
 

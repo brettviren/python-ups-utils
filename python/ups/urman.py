@@ -15,7 +15,7 @@ import tempfile
 from networkx import nx
 
 from ups.commands import UpsCommands, install as install_ups
-from ups.products import product_to_upsargs, upsargs_to_product, make_product
+from ups.products import product_to_upsargs, upsargs_to_product, Product
 import ups.repos
 import ups.tree
 import ups.util
@@ -74,7 +74,7 @@ def depend(ctx, flavor, qualifiers, format, output, full, package, version):
     tree = ups.repos.squash_trees(repos)
 
     flavor = flavor or repos[0].uc.flavor()
-    seed = make_product(package, version, qualifiers, flavor)
+    seed = Product(package, version, qualifiers, flavor)
     subtree = nx.DiGraph()
     subtree.add_node(seed)
     subtree.add_edges_from(nx.bfs_edges(tree, seed)) # this is a minimal rep
@@ -85,7 +85,7 @@ def depend(ctx, flavor, qualifiers, format, output, full, package, version):
     if format == 'dot':
         from . import dot
         text = dot.simple(subtree)
-        open(output,'wb').write(text)
+        open(output,'wb').write(text.encode('utf-8'))
         
     # raw
     print ('%d nodes, %d edges' % (len(subtree.nodes()), len(subtree.edges())))
@@ -192,6 +192,7 @@ def dump_manifest(ctx, mirror, flavor, qualifiers, suite, version):
     for me in matmes:
         click.echo('%16s %16s %20s %s' % (me.name, me.version, me.flavor, me.quals))
 
+
 @cli.command('install')
 @click.option('--dryrun', 'dryrun', default=False, flag_value=True, 
               help="Dry run, do not modify the repository")
@@ -233,7 +234,7 @@ def install(ctx, dryrun, mirror, flavor, qualifiers, force, tmp, suite, version)
     if dryrun:
         print ('Dry-run, not installing these %d products' % len(matmes))
         for me in matmes:
-            pd = make_product(me.name, me.version, me.quals, me.flavor, repodir)
+            pd = Product(me.name, me.version, me.quals, me.flavor, repodir)
             if uc.exists(pd):
                 print ('\t%s -> %s (exists)' % (me.tarball, repodir))
                 continue
@@ -252,7 +253,7 @@ def install(ctx, dryrun, mirror, flavor, qualifiers, force, tmp, suite, version)
     repo = ups.repos.UpsRepo(repodir)
 
     for me in matmes:
-        pd = make_product(me.name, me.version, me.quals, me.flavor, repodir)
+        pd = Product(me.name, me.version, me.quals, me.flavor, repodir)
         if uc.exists(pd):
             print ('\t%s -> %s/%s (skipped, exists)' %(mirror, tmpdir, me.tarball))
             print ('\t%s -> %s (skipped, exists)' % (me.tarball, repodir))
@@ -263,6 +264,53 @@ def install(ctx, dryrun, mirror, flavor, qualifiers, force, tmp, suite, version)
         repo.unpack(me, tfile)
 
     
+
+@cli.command('view')
+@click.option('--action', default = 'symlink',
+                  type=click.Choice(['symlink', 'hardlink', 'copy', 'remove']),
+                  help="Specify what to do to the view")
+@click.option('-e','--exclude', multiple=True,
+                  help="Exclude products matching given regex from the action")
+@click.option('--dependencies/--no-dependencies', default=True,
+                  help="Recurse the action down the dependency tree")
+@click.option('-q','--quals', default='',
+              help="Specify build qualifiers as colon-separated list")
+@click.argument('package')
+@click.argument('version')
+@click.argument('path')
+@click.pass_context
+def view(ctx, action, exclude, dependencies, quals, package, version, path):
+    '''
+    Act on a view at given path of the UPS products area with given
+    package/version at the top of the dependency tree.
+    '''
+
+    repos = [ups.repos.UpsRepo(pdir) for pdir in ctx.obj['PRODUCTS']]
+    tree = prods = ups.repos.squash_trees(repos)
+
+    # fixme: deal with flavor?e14:prof
+    #flavor = flavor or repos[0].uc.flavor()
+    want = Product(package, version, quals)
+
+    prods = [p for p in prods if p.name == want.name]
+    if len(prods) > 1:
+        prods = [p for p in prods if p.version == want.version]
+    if len(prods) > 1:
+        prods = [p for p in prods if p.quals == want.quals]
+    if len(prods) == 0:
+        click.echo("No matching package: %s" % (want,))
+        return 1
+    if len(prods) > 1:
+        click.echo("No uniquely matching package: %s" (want,))
+        click.echo("\n".join(map(str,prods)))
+        return 1
+    seed = prods[0]
+    click.echo("Found: %s" % (seed,))
+    prods = nx.algorithms.descendants(tree, seed)
+    prods.add(seed)
+    for p in sorted(prods):
+        click.echo(str(p))
+
 
 def main():
     cli(obj={}, auto_envvar_prefix='UU')

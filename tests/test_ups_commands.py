@@ -8,7 +8,7 @@ WARNING: these tests will merely print a message and succeed if UPS is not detec
 
 import os
 from ups.commands import install, UpsCommands
-from ups.products import make_product
+from ups.products import Product
 
 ups_version = '5.1.2'
 ups_version_underscore = 'v' + ups_version.replace('.','_')
@@ -32,7 +32,7 @@ def test_ups_depend():
     '''
     uc = UpsCommands(ups_products)
 
-    prod = make_product('ups', ups_version_underscore, flavor=uc.flavor())
+    prod = Product('ups', ups_version_underscore, flavor=uc.flavor())
     assert prod.flavor
 
     text = uc.depend(prod)

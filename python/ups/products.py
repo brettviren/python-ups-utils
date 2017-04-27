@@ -5,11 +5,25 @@ Data objects and methods for UPS products
 
 from collections import namedtuple
 
-Product = namedtuple("Product",'name version quals flavor repo')
+#Product = namedtuple("Product",'name version quals flavor repo')
+ProductTuple = namedtuple("ProductTuple",'name version quals flavor repo')
+class Product(ProductTuple):
+    '''
+    Collect meta info about a UPS product.
+    '''
+    __slots__ = ()
 
-def make_product(name, version='', quals="", flavor="", repo=""):
-    '''Create an object holding information about a UPS product.'''
-    return Product(name, version, quals, flavor, repo)
+    def __new__(cls, name, version='', quals="", flavor="", repo=""):
+        quals = quals.split(':')
+        quals.sort()
+        quals = ":".join(quals)
+        return ProductTuple.__new__(cls,name,version,quals,flavor,repo)
+
+
+
+# def make_product(name, version='', quals="", flavor="", repo=""):
+#     '''Create an object holding information about a UPS product.'''
+#     return Product(name, version, quals, flavor, repo)
 
 
 
@@ -32,7 +46,7 @@ def upslisting_to_product(string, repo=''):
 
     pkg,ver,flav,qual,chain = [x.replace('"','') for x in string.split()]
 
-    return make_product(pkg,ver,qual,flav,repo)
+    return Product(pkg,ver,qual,flav,repo)
 
 def upsargs_to_product(string, **kwds):
     '''Convert from "pkg ver -f flav -z repo -q quals" to a Product'''
@@ -49,7 +63,7 @@ def upsargs_to_product(string, **kwds):
         ver = a[1]
     except IndexError:
         ver = ''
-    pd = make_product(pkg, ver, o.quals, o.flavor, o.repo)
+    pd = Product(pkg, ver, o.quals, o.flavor, o.repo)
     return pd
 
 def parse_prodlist(text):
@@ -61,7 +75,7 @@ def parse_prodlist(text):
         line =line.strip()
         if not line: continue
         ver,pkg,flav,quals,repo = [x.replace('"','') for x in line.split()]
-        p = make_product(ver, pkg, quals, flav, repo)
+        p = Product(ver, pkg, quals, flav, repo)
         ret.append(p)
     return ret
 

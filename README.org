@@ -98,11 +98,13 @@ To initialize a directory as a UPS repository run:
 
 *** Install a suite of products
 
-You can install a suite of products based on a suite name, its version and probably a list of qualifiers:
+You can "install" a suite of products based on a suite name, its version and probably a list of qualifiers:
 
 #+BEGIN_EXAMPLE
   $ urman -z /path/to/products install lbne v02_05_01 -q e5:prof [--dryrun]
 #+END_EXAMPLE
+
+The "installation" process consists merely of downloading the associated compressed tar files and unpacking them.  Even with a fast Internet connection this can take an hour, depending on the size of the suite.
 
 *** Purge products based on a top product
 
