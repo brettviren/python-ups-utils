@@ -27,19 +27,25 @@ def test_form_url():
     want = 'http://oink.fnal.gov/distro/manifest/nu/v1_10_00a/nu-1.10.00a-Linux64bit+2.6-2.5-e5-prof_MANIFEST.txt'
     got = form_url(pd)
     if not got == want:
-        print '\nWANT:"%s"\n GOT:"%s"' % (want, got)
+        print ('\nWANT:"%s"\n GOT:"%s"' % (want, got))
     assert got == want
 
 
 def test_download():
-    url = 'http://oink.fnal.gov/distro/manifest/nu/v1_10_00a/nu-1.10.00a-Linux64bit+2.6-2.5-e5-prof_MANIFEST.txt'
+    '''
+    Test ability to download from scisoft for both false and true positive.
+    '''
+    url = 'http://scisoft.fnal.gov/scisoft/bundles/nu/v2_00_00/manifest/nu-2.00.00-Linux64bit%2B3.19-2.19-s33-e10-prof_MANIFEST.txt'
+    print ("Downloading %s" % url)
     text = download(url)
     assert text.startswith('ups')
+    print ("parsing")
     man = parse_text(text)
     assert man[0].name == 'ups'
-    assert man[0].version == 'v5_1_2'
+    assert man[0].version == 'v5_2_0'
 
-    bad_url = 'http://oink.fnal.gov/distro/manifest/dne/v0_0_0/dne-0.0.0-Bland-unqualified-failure_MANIFEST.txt'
+    bad_url = 'http://scisoft.fnal.gov/scisoft/bundles/dne/v0_00_00/manifest/dne-0.00.00-Flavorless+0.0-0.0-z00-z00-nothing_MANIFEST.txt'
+    print ("Downloading bad URL %s" % bad_url)
     text = download(bad_url)
     assert text is None
 

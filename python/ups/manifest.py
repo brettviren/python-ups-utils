@@ -4,7 +4,8 @@
 Manifests are text files containing a description of UPS binary
 products making up a suite of software.
 '''
-import urllib
+from urllib.request import urlopen
+from urllib.error import HTTPError
 from collections import namedtuple
 
 default_base_url="http://oink.fnal.gov/distro/manifest"
@@ -22,9 +23,8 @@ def parse_line(line):
     '''
     line = line.strip()
     if not line:
-        raise ValueError, 'No manifest line to parse'
+        raise ValueError('No manifest line to parse')
     chunks = line.split(None,3)
-    #print '|'.join(chunks)
     name,ver,tarball,rest = chunks
 
 
@@ -54,10 +54,13 @@ def download(url):
     '''
     Download manifest from given URL and return its text.
     '''
-    fd = urllib.urlopen(url)
+    try:
+        fd = urlopen(url)
+    except HTTPError:
+        return None
     rc = fd.getcode() 
     if rc == 200:
-        return fd.read()
+        return fd.read().decode()
     
 def parse_text(text):
     '''

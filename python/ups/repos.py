@@ -32,7 +32,7 @@ class UpsRepo(object):
 
     def __init__(self, directory, cachedir = '~/.ups-util/cache/'):
         if not os.path.exists(directory):
-            raise RuntimeError, 'No such directory: "%s"' % directory
+            raise RuntimeError('No such directory: "%s"' % directory)
         self.uc = UpsCommands(directory)
         self._repo_dir = directory
         self._cache_dir = os.path.expanduser(os.path.expandvars(cachedir))

@@ -48,7 +48,7 @@ def test_flavor():
     Make sure this platform has a doctored UPS flavor
     '''
     uc = FakeUC()
-    print uc.flavor()
+    print ("flavor is %s" % uc.flavor())
 
 def test_parse_one():
     uc = FakeUC()
@@ -77,7 +77,7 @@ def test_parse_all():
     assert 1056 == full_tree.size()
 
     top = ups.depend.roots(full_tree)
-    print 'Top:\n', '\n'.join(['\t%s %s' % (p.name, p.version) for p in sorted(top)])
+    print ('Top:\n', '\n'.join(['\t%s %s' % (p.name, p.version) for p in sorted(top)]))
     assert 54 == len(top)
 
     dead = set([n for n in top if n.name == 'lbnecode' and n.version.startswith('v02_00')])
@@ -86,8 +86,8 @@ def test_parse_all():
     alive = top.difference(dead)
     assert 52 == len(alive)
 
-    print '%d dead, %d alive, %d top' % \
-        (len(dead), len(alive), len(top))
+    print ('%d dead, %d alive, %d top' % \
+        (len(dead), len(alive), len(top)))
 
     dead_tree = nx.DiGraph()
     for n in dead:
@@ -102,10 +102,10 @@ def test_parse_all():
     tolive = set(alive_tree.nodes()).difference(dead_tree.nodes())
     assert 201 == len(tolive)
 
-    print '%d to kill, %d to live, %d all' % \
-        (len(tokill), len(tolive), full_tree.size())
-    print 'Top to kill:\n', '\n'.join(['\t%s %s' % (p.name, p.version) for p in sorted(dead)])
-    print 'To kill:\n', '\n'.join(['\t%s %s' % (p.name, p.version) for p in sorted(tokill)])
+    print ('%d to kill, %d to live, %d all' % \
+        (len(tokill), len(tolive), full_tree.size()))
+    print ('Top to kill:\n', '\n'.join(['\t%s %s' % (p.name, p.version) for p in sorted(dead)]))
+    print ('To kill:\n', '\n'.join(['\t%s %s' % (p.name, p.version) for p in sorted(tokill)]))
     
 
 def _test_resolve():
@@ -114,7 +114,7 @@ def _test_resolve():
     package, version, qualifiers, flavor = ['larsoft', 'v02_00_00', 'e5:prof', 'Linux64bit+2.6-2.12']
     pd = tree.resolve(package, version, qualifiers, flavor)
     if not pd:
-        raise RuntimeError, 'Found no matching: p=%s v=%s q=%s f=%s' % (package,version,qualifiers,flavor)
+        raise RuntimeError('Found no matching: p=%s v=%s q=%s f=%s' % (package,version,qualifiers,flavor))
 
 
 def _test_purge():
@@ -123,8 +123,8 @@ def _test_purge():
     package, version, qualifiers, flavor = ['larsoft', 'v02_00_00', 'e5:prof', 'Linux64bit+2.6-2.12']
     pd = tree.resolve(package, version, qualifiers, flavor)
     if not pd:
-        raise RuntimeError, 'Found no matching package: %s %s %s %s' % (package,version,qualifiers,flavor)
+        raise RuntimeError('Found no matching package: %s %s %s %s' % (package,version,qualifiers,flavor))
     tokill = tree.purge([pd])
     ret = [product_to_upsargs(p) for p in sorted(tokill)]
-    print tokill
+    print (tokill)
     

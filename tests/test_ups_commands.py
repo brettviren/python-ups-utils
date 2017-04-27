@@ -23,6 +23,7 @@ def test_ups_flavor():
     f = uc.flavor()
     assert f
     kern = os.uname()[0]
+    #print ('type(f) = "%s", type(kern) = "%s"' % (type(f), type(kern)))
     assert f.startswith(kern)
 
 def test_ups_depend():
@@ -32,7 +33,6 @@ def test_ups_depend():
     uc = UpsCommands(ups_products)
 
     prod = make_product('ups', ups_version_underscore, flavor=uc.flavor())
-    #print 'PROD:',prod
     assert prod.flavor
 
     text = uc.depend(prod)
@@ -48,10 +48,9 @@ def test_ups_avail():
     uc = UpsCommands(ups_products)
 
     pds = uc.avail()
-    #print '\n'.join([str(p) for p in sorted(pds)])
     for p in pds:
         assert not p.repo
-        print p.name,p.version,p.flavor,p.quals
+        print (p.name,p.version,p.flavor,p.quals)
 
 def test_ups_deps():
     uc = UpsCommands(ups_products)
@@ -66,7 +65,7 @@ def test_failure():
 
     try:
         out = uc.call('',cmd='/bin/false')
-    except RuntimeError,err:
-        print 'Caught expected error: %s' % err
+    except RuntimeError as err:
+        print ('Caught expected error: %s' % err)
     else:
-        raise Exception,'That command should have failed'
+        raise Exception('That command should have failed')

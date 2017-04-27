@@ -81,10 +81,10 @@ class Oink(object):
         if mf: return mf
 
         url = self.manifest_url(suite, version, flavor, quals)
-        print 'Downloading manifest: "%s"' % url
+        print ('Downloading manifest: "%s"' % url)
         mftext = manifest.download(url)
         if not mftext: 
-            raise RuntimeError, 'Failed to download: %s' % url 
+            raise RuntimeError('Failed to download: %s' % url )
             return
 
         mflist = self.add_manifest(mfname, mftext)
@@ -147,12 +147,10 @@ def find_manifests(server, limit = None):
         if limit and suite_dir not in limit:
             continue
         suite_url = os.path.join(url, suite_dir)
-        #print suite_url
         for vname, vdate, vsize in util.slurp_apache_index(suite_url):
             if vsize:           # skip files
                 continue
             ver_url = os.path.join(url, suite_dir, vname)
-            #print ver_url
             mans = [n for n,d,s in util.slurp_apache_index(ver_url) if s and n.endswith('_MANIFEST.txt')]
             manifests += [os.path.join(ver_url, m) for m in mans]
 
@@ -165,4 +163,4 @@ def make(name = 'scisoft', *args, **kwds):
         return Oink(*args, **kwds)
     if name == 'scisoft':
         return Scisoft(*args, **kwds)
-    KeyError, 'Unknown ups mirror: "%s"' % name
+    raise KeyError('Unknown ups mirror: "%s"' % name)

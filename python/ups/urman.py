@@ -68,7 +68,7 @@ def depend(ctx, flavor, qualifiers, format, output, full, package, version):
     '''
     format = format or os.path.splitext(output)[1][1:]
     if format not in ['raw','dot']:
-        raise RuntimeError, 'Unknown format: "%s"' % format
+        raise RuntimeError('Unknown format: "%s"' % format)
 
     repos = [ups.repos.UpsRepo(pdir) for pdir in ctx.obj['PRODUCTS']]
     tree = ups.repos.squash_trees(repos)
@@ -88,7 +88,7 @@ def depend(ctx, flavor, qualifiers, format, output, full, package, version):
         open(output,'wb').write(text)
         
     # raw
-    print '%d nodes, %d edges' % (len(subtree.nodes()), len(subtree.edges()))
+    print ('%d nodes, %d edges' % (len(subtree.nodes()), len(subtree.edges())))
 
 
 @cli.command()
@@ -122,7 +122,7 @@ def purge(ctx, dryrun, package, version):
     tree = ups.repos.squash_trees(repos)
     pds = ups.util.match(tree.nodes(), name=package, version=version)
     if not pds:
-        raise RuntimeError, 'No matches for name="%s" version="%s"' % (package,version)
+        raise RuntimeError('No matches for name="%s" version="%s"' % (package,version))
 
     #click.echo('Purging based on:')
     #for pd in pds:
@@ -150,7 +150,7 @@ def purge(ctx, dryrun, package, version):
 
     # actually do the deed
     for path in sorted(rmpaths):
-        print 'removing: %s' % path
+        print ('removing: %s' % path)
         shutil.rmtree(path)
 
 
@@ -162,7 +162,7 @@ def purge(ctx, dryrun, package, version):
               help="Limit to one or more suites")
 @click.pass_context
 def manifest_urls(ctx, mirror, limit):
-    print 'Limiting:',str(limit)
+    print ('Limiting: %s' % limit)
     manifests = ups.mirror.find_manifests(mirror, limit)
     if not manifests:
         click.echo('No manifests for mirror "%s" %s' % (mirror, ', '.join(limit)))
@@ -231,13 +231,13 @@ def install(ctx, dryrun, mirror, flavor, qualifiers, force, tmp, suite, version)
     matmes = mir.load_manifest(suite, version, flavor, qualifiers)
 
     if dryrun:
-        print 'Dry-run, not installing these %d products' % len(matmes)
+        print ('Dry-run, not installing these %d products' % len(matmes))
         for me in matmes:
             pd = make_product(me.name, me.version, me.quals, me.flavor, repodir)
             if uc.exists(pd):
-                print '\t%s -> %s (exists)' % (me.tarball, repodir)
+                print ('\t%s -> %s (exists)' % (me.tarball, repodir))
                 continue
-            print '\t%s -> %s' %(me.tarball, repodir)
+            print ('\t%s -> %s' %(me.tarball, repodir))
         return
 
     if not tmp:
@@ -254,12 +254,12 @@ def install(ctx, dryrun, mirror, flavor, qualifiers, force, tmp, suite, version)
     for me in matmes:
         pd = make_product(me.name, me.version, me.quals, me.flavor, repodir)
         if uc.exists(pd):
-            print '\t%s -> %s/%s (skipped, exists)' %(mirror, tmpdir, me.tarball)
-            print '\t%s -> %s (skipped, exists)' % (me.tarball, repodir)
+            print ('\t%s -> %s/%s (skipped, exists)' %(mirror, tmpdir, me.tarball))
+            print ('\t%s -> %s (skipped, exists)' % (me.tarball, repodir))
             continue
-        print '\t%s -> %s/%s' %(mirror, tmpdir, me.tarball)
+        print ('\t%s -> %s/%s' %(mirror, tmpdir, me.tarball))
         tfile = mir.download(me, tmpdir)
-        print '\t%s -> %s' %(me.tarball, repodir)
+        print ('\t%s -> %s' %(me.tarball, repodir))
         repo.unpack(me, tfile)
 
     

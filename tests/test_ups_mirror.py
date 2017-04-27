@@ -12,12 +12,12 @@ import tempfile
 import ups.mirror
 import ups.util
 
-def test_oink():
+def _test_oink():
     '''
     Test the "oink" mirror
     '''
     tdir = tempfile.mkdtemp(prefix='ups-mirror-test-oink-')
-    print 'Using cache in: %s' % tdir
+    print ('Using cache in: %s' % tdir)
     oink = ups.mirror.make('oink', cachedir=tdir)
 
     a = oink.avail()
@@ -31,7 +31,7 @@ def test_oink():
     l2 = oink.load_manifest(*mfdata)
     t2 = time.time()
 
-    print 'Load %d in %f seconds and %d in %f seconds' % (len(l1), t1-t0, len(l2), t2-t1)
+    print ('Load %d in %f seconds and %d in %f seconds' % (len(l1), t1-t0, len(l2), t2-t1))
     assert len(l1) == len(l2)
     assert l1 == l2
     

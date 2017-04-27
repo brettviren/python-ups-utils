@@ -2,7 +2,7 @@
 
 import re
 
-from products import make_product
+from .products import make_product
 import networkx as nx
 
 def parse_line(line):
@@ -15,10 +15,10 @@ def parse_line(line):
     if line.startswith('|'):
         m = re.match('([\| ]  )*\|__', line)
         if not m:
-            raise ValueError, 'Failed to parse line: %s' % line
+            raise ValueError('Failed to parse line: %s' % line)
         pre = m.group(0)
         line = line[len(pre):]
-        depth = len(pre)/3
+        depth = len(pre)//3
 
     quals = ''
     chunks = line.split()
@@ -27,7 +27,7 @@ def parse_line(line):
     elif len(chunks) == 8:    
         pkg,ver, f,flav, z,path, q,quals = chunks
     else:
-        raise ValueError, 'parse failure for line: %s' % str(chunks)
+        raise ValueError('parse failure for line: %s' % str(chunks))
     return depth, make_product(pkg, ver, quals, flav, path)
 
 def parse(text):
@@ -41,7 +41,8 @@ def parse(text):
     parents = list()
     for line in text.split('\n'):
         line = line.strip()
-        if not line: continue
+        if not line:
+            continue
         depth, pd = parse_line(line)
 
         tree.add_node(pd)

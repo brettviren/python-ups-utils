@@ -4,7 +4,7 @@ General utilities.
 '''
 
 import re
-import urllib
+from urllib.request import urlopen
 
 def match(things, **kwds):
     '''Return list of matching elements from sequence <things>.  
@@ -43,12 +43,12 @@ def match(things, **kwds):
     return ret
 
 def download(url, target):
-    fd = urllib.urlopen(url)
+    fd = urlopen(url)
     rc = fd.getcode() 
     if rc == 200:
         open(target,'wb').write(fd.read())
     else:
-        raise RuntimeError, 'Failed to download (%d) %s' % (rc, url)
+        raise RuntimeError('Failed to download (%d) %s' % (rc, url))
     return target
 
 def slurp_lxml(url):
@@ -56,10 +56,10 @@ def slurp_lxml(url):
     Return an HTML tree object made from the content at the given URL
     '''
     import lxml.html
-    fd = urllib.urlopen(url)
+    fd = urlopen(url)
     rc = fd.getcode() 
     if rc != 200:
-        raise RuntimeError, 'Failed to download (%d) %s' % (rc, url)
+        raise RuntimeError('Failed to download (%d) %s' % (rc, url))
     text = fd.read()
     return lxml.html.fromstring(text)
 
@@ -68,10 +68,10 @@ def slurp_bs(url):
     Return an HTML tree object made from the content at the given URL
     '''
     import BeautifulSoup
-    fd = urllib.urlopen(url)
+    fd = urlopen(url)
     rc = fd.getcode() 
     if rc != 200:
-        raise RuntimeError, 'Failed to download (%d) %s' % (rc, url)
+        raise RuntimeError('Failed to download (%d) %s' % (rc, url))
     text = fd.read()
     return BeautifulSoup.BeautifulSoup(text)
 
@@ -87,9 +87,9 @@ def slurp_apache_index(url):
     List is a tuple of (name, date, size).  If <name> is a directory, <size> is None.
     '''
     try:
-        html = urllib.urlopen(url).read()
-    except IOError, e:
-        raise RuntimeError, 'error fetching %s: %s' % (url, e)
+        html = urlopen(url).read()
+    except IOError as e:
+        raise RuntimeError('error fetching %s: %s' % (url, e))
     if not url.endswith('/'):
         url += '/'
     files = parse_re.findall(html)

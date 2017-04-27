@@ -6,7 +6,7 @@ import tempfile
 import tarfile
 import urllib
 from glob import glob
-from subprocess import Popen, PIPE, check_call
+from subprocess import Popen, PIPE, check_call, run
 
 import ups.products
 import ups.depend
@@ -47,17 +47,18 @@ class UpsCommands(object):
         #print 'UPS CMD:',line
         if usebash:
             line = "/bin/bash -c '%s'" % line
-        p = Popen(line, shell=True, stdout = PIPE)
-        out,err = p.communicate()
+        #p = Popen(line, shell=True, stdout = PIPE)
+        done = run(line, shell=True, stdout = PIPE, universal_newlines=True)
+        
         if returnrc:
-            return p.returncode
-        if p.returncode != 0:
-            print 'STDOUT:'
-            print out or ''
-            print 'STDERR:'
-            print err or ''
-            raise RuntimeError, 'Command failed (%d): "%s"' % (p.returncode, line)
-        return out
+            return done.returncode
+        if done.returncode != 0:
+            print ('STDOUT:')
+            print (done.stdout or '')
+            print ('STDERR:')
+            print (done.stderr or '')
+            raise RuntimeError('Command failed (%d): "%s"' % (done.returncode, line))
+        return done.stdout
 
     def flavor(self):
         '''Return the output of "ups flavor"'''
@@ -103,7 +104,7 @@ def install(version, products_dir, temp_dir = None):
 
     temp_dir = temp_dir or tempfile.mkdtemp()
     temp_dir = os.path.realpath(temp_dir)
-    print 'Using temporary directory: %s' % temp_dir
+    print ('Using temporary directory: %s' % temp_dir)
     os.path.exists(temp_dir) or os.makedirs(temp_dir)
 
     srctarball = "ups-%s-source.tar.bz2" % version
